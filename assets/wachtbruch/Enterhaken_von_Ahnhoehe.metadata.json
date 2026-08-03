@@ -1,0 +1,366 @@
+{
+  "asset": "Enterhaken von Ahnhoehe",
+  "assetId": "enterhaken-ahnhoehe",
+  "version": 1,
+  "format": "glTF Binary 2.0",
+  "units": "meters",
+  "upAxis": "Y",
+  "forwardAxis": "+Z",
+  "pivot": "hand_chain_end",
+  "dimensionsMeters": [
+    0.57,
+    1.58,
+    0.52
+  ],
+  "designedFor": "wachtanker-ahnhoehe",
+  "meshCount": 38,
+  "vertices": 7608,
+  "triangles": 2536,
+  "materials": [
+    "Bronze_Worn",
+    "Bronze_Edge",
+    "Bronze_Dark",
+    "Chain_Iron",
+    "Chain_Edges",
+    "Grip_Leather",
+    "Rune_Gold",
+    "Rune_Cyan",
+    "Rune_Heart",
+    "Collision_Invisible"
+  ],
+  "animationClips": [
+    {
+      "name": "Enterhaken_Chain_Sway",
+      "durationSeconds": 2
+    }
+  ],
+  "importantNodes": {
+    "root": "Enterhaken_von_Ahnhoehe",
+    "hookHead": "Hook_Head",
+    "chainRoot": "Chain_Root",
+    "handAttachment": "Attach_Hand",
+    "chainAttachment": "Attach_Chain",
+    "impactPoint": "Hook_Impact",
+    "collision": "COLLIDER_HookHead",
+    "rune": "Hook_Rune_Awake"
+  },
+  "chain": {
+    "linkCount": 9,
+    "firstLink": "Chain_Link_01",
+    "lastLink": "Chain_Link_09",
+    "runtimePlacement": "Links may be distributed and oriented between Attach_Hand and Attach_Chain."
+  },
+  "integration": {
+    "suggestedAssetId": "enterhaken-ahnhoehe",
+    "pairedAnchorAssetId": "wachtanker-ahnhoehe",
+    "anchorSnapNode": "Grapple_Target",
+    "hookSnapNode": "Hook_Impact"
+  },
+  "meshes": [
+    {
+      "name": "Hand_Chain_Ring",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 168,
+      "runtime": {
+        "equipmentGrip": true
+      }
+    },
+    {
+      "name": "Hand_Grip",
+      "material": "Grip_Leather",
+      "visible": true,
+      "triangles": 32,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_01_Ring",
+      "material": "Chain_Edges",
+      "visible": true,
+      "triangles": 120,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_01_Bronze_Facet",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_02_Ring",
+      "material": "Chain_Iron",
+      "visible": true,
+      "triangles": 120,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_02_Bronze_Facet",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_03_Ring",
+      "material": "Chain_Iron",
+      "visible": true,
+      "triangles": 120,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_03_Bronze_Facet",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_04_Ring",
+      "material": "Chain_Edges",
+      "visible": true,
+      "triangles": 120,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_04_Bronze_Facet",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_05_Ring",
+      "material": "Chain_Iron",
+      "visible": true,
+      "triangles": 120,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_05_Bronze_Facet",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_06_Ring",
+      "material": "Chain_Iron",
+      "visible": true,
+      "triangles": 120,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_06_Bronze_Facet",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_07_Ring",
+      "material": "Chain_Edges",
+      "visible": true,
+      "triangles": 120,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_07_Bronze_Facet",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_08_Ring",
+      "material": "Chain_Iron",
+      "visible": true,
+      "triangles": 120,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_08_Bronze_Facet",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_09_Ring",
+      "material": "Chain_Iron",
+      "visible": true,
+      "triangles": 120,
+      "runtime": {}
+    },
+    {
+      "name": "Chain_Link_09_Bronze_Facet",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Hook_Chain_Connector",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 168,
+      "runtime": {
+        "chainAttachment": true
+      }
+    },
+    {
+      "name": "Hook_Shaft",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 32,
+      "runtime": {}
+    },
+    {
+      "name": "Hook_Collar_Lower",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 40,
+      "runtime": {}
+    },
+    {
+      "name": "Hook_Collar_Upper",
+      "material": "Bronze_Edge",
+      "visible": true,
+      "triangles": 40,
+      "runtime": {}
+    },
+    {
+      "name": "Hook_Central_Spike",
+      "material": "Bronze_Edge",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Claw_1_Base",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Claw_1_Arm",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Hook_Tip_01",
+      "material": "Bronze_Edge",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {
+        "impactSurface": true,
+        "tipIndex": 1,
+        "tipPosition": [
+          0.19485571585149872,
+          1.535,
+          0.11249999999999999
+        ]
+      }
+    },
+    {
+      "name": "Claw_2_Base",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Claw_2_Arm",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Hook_Tip_02",
+      "material": "Bronze_Edge",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {
+        "impactSurface": true,
+        "tipIndex": 2,
+        "tipPosition": [
+          -0.19485571585149866,
+          1.535,
+          0.11250000000000007
+        ]
+      }
+    },
+    {
+      "name": "Claw_3_Base",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Claw_3_Arm",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Hook_Tip_03",
+      "material": "Bronze_Edge",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {
+        "impactSurface": true,
+        "tipIndex": 3,
+        "tipPosition": [
+          -4.133182947122317e-17,
+          1.535,
+          -0.225
+        ]
+      }
+    },
+    {
+      "name": "Hook_Rune_Frame",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Hook_Rune_Crystal",
+      "material": "Rune_Cyan",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "emissionPart": true,
+        "lightColor": "#4fd9dd"
+      }
+    },
+    {
+      "name": "Hook_Rune_Heart",
+      "material": "Rune_Heart",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "COLLIDER_HookHead",
+      "material": "Collision_Invisible",
+      "visible": false,
+      "triangles": 12,
+      "runtime": {
+        "collision": "box",
+        "dimensions": [
+          0.57,
+          0.49,
+          0.52
+        ],
+        "gameUse": "thrown_grapple_head"
+      }
+    }
+  ]
+}

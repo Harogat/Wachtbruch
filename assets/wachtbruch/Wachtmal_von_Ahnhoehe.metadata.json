@@ -1,0 +1,396 @@
+{
+  "asset": "Wachtmal von Ahnhoehe",
+  "assetId": "wachtmal-ahnhoehe",
+  "version": 1,
+  "format": "glTF Binary 2.0",
+  "units": "meters",
+  "upAxis": "Y",
+  "footprintMeters": [
+    2.06,
+    2.06
+  ],
+  "approximateHeightMeters": 2.18,
+  "recommendedWachtbruchCell": 2.35,
+  "pivot": "ground_center",
+  "meshCount": 45,
+  "vertices": 2568,
+  "triangles": 856,
+  "materials": [
+    "Stone_Main",
+    "Stone_Light",
+    "Stone_Dark",
+    "Stone_Crack",
+    "Bronze_Worn",
+    "Bronze_Dark",
+    "Rune_Gold",
+    "Core_Cyan",
+    "Core_Heart",
+    "Collision_Invisible"
+  ],
+  "animationClips": [
+    {
+      "name": "Wachtmal_Awaken_Idle",
+      "durationSeconds": 3
+    }
+  ],
+  "importantNodes": {
+    "root": "Wachtmal_von_Ahnhoehe",
+    "collision": "COLLIDER_Wachtmal",
+    "animatedCore": "Core_Assembly_Awake",
+    "glowRunes": "Runes_Awake",
+    "frontSigil": "Sigil_Ahnhoehe",
+    "leftArch": "Arch_Left_Broken",
+    "rightArch": "Arch_Right_Broken"
+  },
+  "states": {
+    "dormant": "Hide Core_Assembly_Awake and Runes_Awake or reduce emissive intensity.",
+    "awakened": "Show Core_Assembly_Awake and Runes_Awake; play Wachtmal_Awaken_Idle."
+  },
+  "meshes": [
+    {
+      "name": "Base_Lower_Octagon",
+      "material": "Stone_Dark",
+      "visible": true,
+      "triangles": 32,
+      "runtime": {}
+    },
+    {
+      "name": "Base_Chipped_Slab",
+      "material": "Stone_Main",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Plinth_Upper_Octagon",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 32,
+      "runtime": {}
+    },
+    {
+      "name": "Plinth_Rune_Disc",
+      "material": "Stone_Dark",
+      "visible": true,
+      "triangles": 48,
+      "runtime": {}
+    },
+    {
+      "name": "Crack_01",
+      "material": "Stone_Crack",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Crack_02",
+      "material": "Stone_Crack",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Crack_03",
+      "material": "Stone_Crack",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Crack_04",
+      "material": "Stone_Crack",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Sigil_Stem",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Sigil_Left_Ray",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Sigil_Right_Ray",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Sigil_Base",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Rune_01",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "runeIndex": 1
+      }
+    },
+    {
+      "name": "Rune_02",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "runeIndex": 2
+      }
+    },
+    {
+      "name": "Rune_03",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "runeIndex": 3
+      }
+    },
+    {
+      "name": "Rune_04",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "runeIndex": 4
+      }
+    },
+    {
+      "name": "Rune_05",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "runeIndex": 5
+      }
+    },
+    {
+      "name": "Rune_06",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "runeIndex": 6
+      }
+    },
+    {
+      "name": "Rune_07",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "runeIndex": 7
+      }
+    },
+    {
+      "name": "Rune_08",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "runeIndex": 8
+      }
+    },
+    {
+      "name": "Arch_Left_Foot",
+      "material": "Stone_Dark",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Arch_Right_Foot",
+      "material": "Stone_Dark",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Arch_Left_Broken_Stone_01",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Arch_Left_Broken_Stone_02",
+      "material": "Stone_Main",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Arch_Left_Broken_Stone_03",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Arch_Left_Broken_Stone_04",
+      "material": "Stone_Main",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Arch_Right_Broken_Stone_01",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Arch_Right_Broken_Stone_02",
+      "material": "Stone_Main",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Arch_Right_Broken_Stone_03",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Arch_Right_Broken_Cap",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 16,
+      "runtime": {}
+    },
+    {
+      "name": "Core_Crystal",
+      "material": "Core_Cyan",
+      "visible": true,
+      "triangles": 24,
+      "runtime": {
+        "emissionPart": true,
+        "lightColor": "#55dfe2"
+      }
+    },
+    {
+      "name": "Core_Heart",
+      "material": "Core_Heart",
+      "visible": true,
+      "triangles": 20,
+      "runtime": {
+        "emissionPart": true,
+        "lightColor": "#f2c14e"
+      }
+    },
+    {
+      "name": "Halo_Broken_Segment_01",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 64,
+      "runtime": {}
+    },
+    {
+      "name": "Halo_Broken_Segment_02",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 48,
+      "runtime": {}
+    },
+    {
+      "name": "Halo_Broken_Segment_03",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 72,
+      "runtime": {}
+    },
+    {
+      "name": "Halo_Broken_Segment_04",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 32,
+      "runtime": {}
+    },
+    {
+      "name": "Floating_Shard_01",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 20,
+      "runtime": {}
+    },
+    {
+      "name": "Floating_Shard_02",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 20,
+      "runtime": {}
+    },
+    {
+      "name": "Floating_Shard_03",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 20,
+      "runtime": {}
+    },
+    {
+      "name": "Floating_Shard_04",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 20,
+      "runtime": {}
+    },
+    {
+      "name": "Ground_Shard_01",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Ground_Shard_02",
+      "material": "Stone_Main",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Ground_Shard_03",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Ground_Shard_04",
+      "material": "Stone_Main",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "COLLIDER_Wachtmal",
+      "material": "Collision_Invisible",
+      "visible": false,
+      "triangles": 12,
+      "runtime": {
+        "collision": "box",
+        "dimensions": [
+          1.78,
+          1.02,
+          1.72
+        ],
+        "gameUse": "static_obstacle"
+      }
+    }
+  ]
+}

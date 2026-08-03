@@ -1,0 +1,16 @@
+{
+  "package": "Wachthelm_von_Ahnhoehe_Mani_Neufassung_Paket",
+  "assetFile": "Wachthelm_von_Ahnhoehe_Mani_Neufassung.glb",
+  "metadataFile": "Wachthelm_von_Ahnhoehe_Mani_Neufassung.metadata.json",
+  "previewSheet": "Wachthelm_von_Ahnhoehe_Mani_Neufassung_ansichten.png",
+  "intentionalOverlay": true,
+  "requiredRoots": [
+    "Wachthelm_von_Ahnhoehe",
+    "Wachthelm_von_Ahnhoehe001"
+  ],
+  "requiredAnimations": [
+    "Wachthelm_Rune_Pulse",
+    "Wachthelm_Rune_Pulse.001"
+  ],
+  "preservationRule": "Keep both original roots visible, aligned and spatially overlaid."
+}

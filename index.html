@@ -1,0 +1,2914 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wachtbruch - Ruinen von Ahnhoehe</title>
+  <link rel="icon" type="image/png" href="./vendor/kenney-mini-dungeon/Previews/shield-round.png">
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f2efe6;
+      --muted: #b8c2bd;
+      --panel: rgba(15, 21, 22, 0.78);
+      --panel-strong: rgba(15, 21, 22, 0.92);
+      --line: rgba(238, 232, 215, 0.18);
+      --accent: #e7c56c;
+      --danger: #dc7263;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #172124;
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    select,
+    input { font: inherit; }
+
+    #scene-shell,
+    #scene-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #scene-canvas { display: block; }
+
+    .scene-title {
+      position: absolute;
+      top: 22px;
+      left: 24px;
+      z-index: 3;
+      pointer-events: none;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.62);
+    }
+
+    .scene-title h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 4vw, 58px);
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .scene-title p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 4;
+      display: flex;
+      gap: 8px;
+    }
+
+    body.game-active .player-menu-shortcut { display: none; }
+
+    .game-menu {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: flex-end;
+      background: rgba(6, 10, 11, 0.54);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+
+    .game-menu[hidden] { display: none; }
+
+    .game-menu.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .game-menu-surface {
+      display: flex;
+      width: min(360px, calc(100% - 28px));
+      height: 100%;
+      flex-direction: column;
+      gap: 18px;
+      padding: 22px;
+      border-left: 1px solid var(--accent);
+      background: rgba(12, 18, 19, 0.97);
+      box-shadow: -18px 0 70px rgba(0, 0, 0, 0.42);
+      transform: translateX(28px);
+      transition: transform 180ms ease;
+    }
+
+    .game-menu.is-open .game-menu-surface { transform: translateX(0); }
+
+    .game-menu-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .game-menu-header h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 25px;
+      font-weight: 500;
+    }
+
+    .game-menu-actions {
+      display: grid;
+      gap: 9px;
+    }
+
+    .game-menu-item {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 54px;
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .game-menu-item:hover,
+    .game-menu-item:focus-visible,
+    .game-menu-item.is-controller-focus {
+      border-color: var(--accent);
+      background: rgba(231, 197, 108, 0.11);
+      color: var(--accent);
+      outline: none;
+    }
+
+    .game-menu-item-status {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .game-menu-item:focus-visible .game-menu-item-status,
+    .game-menu-item.is-controller-focus .game-menu-item-status { color: var(--accent); }
+
+    .game-menu-item:disabled {
+      cursor: default;
+      opacity: 0.45;
+    }
+
+    .game-menu-foot {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .start-screen,
+    .game-over-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 18;
+      color: var(--ink);
+    }
+
+    .start-screen[hidden],
+    .game-over-screen[hidden] { display: none; }
+
+    .start-screen {
+      display: grid;
+      align-content: center;
+      justify-items: start;
+      padding: clamp(28px, 8vw, 128px);
+      background: rgba(7, 12, 13, 0.72);
+      opacity: 0;
+      transition: opacity 500ms ease;
+    }
+
+    .start-screen.is-open { opacity: 1; }
+    .start-screen:not(.is-open) { pointer-events: none; }
+
+    .start-screen-copy {
+      display: grid;
+      width: min(760px, 100%);
+      gap: 14px;
+    }
+
+    .screen-kicker {
+      color: var(--accent);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .start-screen h1,
+    .game-over-screen h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 400;
+      line-height: 0.95;
+    }
+
+    .start-screen h1 {
+      font-size: clamp(50px, 9vw, 116px);
+    }
+
+    .start-screen-copy > p,
+    .game-over-copy > p {
+      max-width: 460px;
+      margin: 0;
+      color: var(--muted);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(17px, 2vw, 23px);
+      line-height: 1.45;
+    }
+
+    .screen-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .save-slot-picker {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+      margin-top: 10px;
+    }
+
+    .save-slot-card {
+      display: grid;
+      min-width: 0;
+      min-height: 118px;
+      align-content: start;
+      gap: 5px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(13, 20, 21, 0.86);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .save-slot-card:hover,
+    .save-slot-card:focus-visible,
+    .save-slot-card.is-controller-focus,
+    .save-slot-card[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: rgba(231, 197, 108, 0.1);
+      outline: none;
+    }
+
+    .save-slot-card.is-damaged {
+      border-color: #b85f55;
+    }
+
+    .save-slot-head,
+    .save-slot-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .save-slot-head {
+      color: var(--accent);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .save-slot-head svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .save-slot-card strong {
+      overflow: hidden;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 17px;
+      font-weight: 500;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .save-slot-detail,
+    .save-slot-meta,
+    .save-slot-status {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .save-slot-detail {
+      min-height: 32px;
+    }
+
+    .save-slot-status {
+      min-height: 18px;
+      margin: 0;
+    }
+
+    .save-slot-status.is-warning { color: #e6a59f; }
+
+    .screen-action {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: rgba(13, 20, 21, 0.9);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .screen-action.primary {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .screen-action:hover,
+    .screen-action:focus-visible,
+    .screen-action.is-controller-focus {
+      border-color: var(--accent);
+      background: rgba(231, 197, 108, 0.12);
+      color: var(--accent);
+      outline: none;
+    }
+
+    .screen-action:disabled {
+      cursor: default;
+      opacity: 0.4;
+    }
+
+    .screen-action svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .game-over-screen {
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      pointer-events: none;
+      isolation: isolate;
+    }
+
+    .game-over-screen::before,
+    .game-over-screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    .game-over-screen::before {
+      background: radial-gradient(
+        circle at 50% 50%,
+        transparent 0,
+        rgba(0, 0, 0, 0.12) 18%,
+        rgba(0, 0, 0, 0.82) 55%,
+        #020303 76%
+      );
+      opacity: 0;
+      transform: scale(1.65);
+      transition: opacity 900ms ease, transform 1500ms cubic-bezier(0.22, 0.7, 0.25, 1);
+    }
+
+    .game-over-screen::after {
+      z-index: -1;
+      background: #020303;
+      opacity: 0;
+      transition: opacity 900ms ease;
+    }
+
+    .game-over-screen.is-darkening::before {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .game-over-screen.is-ready {
+      pointer-events: auto;
+    }
+
+    .game-over-screen.is-ready::after { opacity: 0.76; }
+
+    .game-over-copy {
+      display: grid;
+      justify-items: center;
+      gap: 13px;
+      padding: 26px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 720ms ease, transform 720ms ease;
+    }
+
+    .game-over-screen.is-ready .game-over-copy {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .game-over-screen h2 {
+      font-size: clamp(48px, 9vw, 104px);
+    }
+
+    body.start-screen-open .scene-title,
+    body.start-screen-open .toolbar,
+    body.game-over-open .scene-title,
+    body.game-over-open .toolbar,
+    body.game-over-open .combat-hud,
+    body.game-over-open .enemy-hud,
+    body.game-over-open .combat-actions,
+    body.game-over-open .combat-stick,
+    body.game-over-open .interaction-prompt {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .build-panel {
+      position: absolute;
+      top: 76px;
+      right: 20px;
+      bottom: 22px;
+      z-index: 4;
+      display: flex;
+      width: 292px;
+      min-height: 0;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      overflow-y: auto;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel-strong);
+      backdrop-filter: blur(12px);
+    }
+
+    .build-panel[hidden] { display: none; }
+
+    .qa-panel {
+      position: absolute;
+      top: 76px;
+      right: 20px;
+      z-index: 9;
+      display: grid;
+      width: min(340px, calc(100vw - 40px));
+      max-height: calc(100vh - 96px);
+      gap: 13px;
+      padding: 16px;
+      overflow-y: auto;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--panel-strong);
+      backdrop-filter: blur(12px);
+    }
+
+    .qa-panel[hidden],
+    body:not(.game-active) #qa-toggle {
+      display: none !important;
+    }
+
+    .qa-panel-header,
+    .qa-actions {
+      display: flex;
+      align-items: center;
+    }
+
+    .qa-panel-header {
+      justify-content: space-between;
+    }
+
+    .qa-panel-header h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 500;
+    }
+
+    .qa-panel-header p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .qa-actions {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .qa-actions .action-button {
+      flex: 1 1 calc(50% - 3px);
+    }
+
+    .qa-status {
+      min-height: 18px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .qa-lab {
+      display: grid;
+      gap: 10px;
+      padding-block: 12px;
+      border-block: 1px solid var(--line);
+    }
+
+    .qa-lab-header,
+    .qa-lab-metrics {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .qa-lab-state {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .qa-lab-state.is-active {
+      color: var(--accent);
+    }
+
+    .qa-lab-controls {
+      display: grid;
+      gap: 7px;
+    }
+
+    .qa-lab-controls .equipment-control {
+      grid-template-columns: 70px minmax(0, 1fr) 52px;
+    }
+
+    .qa-lab-metrics {
+      min-height: 29px;
+      padding: 7px 9px;
+      border-left: 2px solid var(--accent);
+      background: rgba(4, 9, 10, 0.38);
+      color: var(--muted);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .qa-lab-metrics strong {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .build-panel h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 500;
+    }
+
+    .build-panel-header,
+    .build-panel-header-actions,
+    .field-head,
+    .button-row,
+    .stepper {
+      display: flex;
+      align-items: center;
+    }
+
+    .build-panel-header,
+    .field-head { justify-content: space-between; }
+
+    .build-panel-header-actions { gap: 6px; }
+
+    .diagnostics-legend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px 8px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(4, 9, 10, 0.4);
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .diagnostics-legend[hidden] { display: none; }
+
+    .diagnostics-key {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .diagnostics-swatch {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 9px;
+      border: 1px solid currentColor;
+    }
+
+    .field-group {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field-label,
+    .field-value,
+    .build-status {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .asset-select {
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 34px 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(4, 9, 10, 0.55);
+      color: var(--ink);
+    }
+
+    .marker-properties,
+    .object-transform {
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(4, 9, 10, 0.38);
+    }
+
+    .marker-properties[hidden],
+    .object-transform[hidden],
+    .marker-property[hidden],
+    .trap-settings[hidden],
+    .chest-drop-settings[hidden],
+    .chest-drop-amount[hidden] { display: none; }
+
+    .marker-property {
+      display: grid;
+      gap: 6px;
+    }
+
+    .trap-settings {
+      display: grid;
+      gap: 8px;
+    }
+
+    .object-transform {
+      display: grid;
+      gap: 9px;
+    }
+
+    .transform-control {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr) 48px;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .transform-control input[type="range"] {
+      width: 100%;
+      min-width: 0;
+      accent-color: var(--accent);
+    }
+
+    .transform-control output {
+      color: var(--ink);
+      font-size: 11px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .editor-view-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    .editor-view-tab {
+      display: inline-flex;
+      min-height: 38px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(4, 9, 10, 0.46);
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .editor-view-tab[aria-selected="true"],
+    .editor-view-tab:hover,
+    .editor-view-tab:focus-visible {
+      border-color: var(--accent);
+      color: var(--accent);
+      outline: none;
+    }
+
+    .editor-view {
+      display: grid;
+      gap: 14px;
+    }
+
+    .editor-view[hidden],
+    .enemy-wave-settings[hidden],
+    .supply-panel[hidden] { display: none; }
+
+    .wave-list {
+      display: grid;
+      gap: 5px;
+    }
+
+    .wave-list-button {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 4px 10px;
+      min-height: 50px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(4, 9, 10, 0.4);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .wave-list-button:hover,
+    .wave-list-button:focus-visible,
+    .wave-list-button[aria-selected="true"] {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .wave-list-button strong {
+      overflow: hidden;
+      font-size: 13px;
+      font-weight: 500;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .wave-list-button span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .wave-list-button .wave-boss-label { color: #ff9d55; }
+
+    .wave-editor-fields {
+      display: grid;
+      gap: 9px;
+      padding-top: 4px;
+      border-top: 1px solid var(--line);
+    }
+
+    .wave-hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .marker-number {
+      width: 100%;
+      min-height: 38px;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(4, 9, 10, 0.55);
+      color: var(--ink);
+    }
+
+    .mode-group {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    .mode-button,
+    .action-button,
+    .mini-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 38px;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(4, 9, 10, 0.46);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .mode-button:hover,
+    .mode-button:focus-visible,
+    .action-button:hover,
+    .action-button:focus-visible,
+    .action-button.is-controller-focus,
+    .mini-button:hover,
+    .mini-button:focus-visible,
+    .mini-button.is-controller-focus,
+    .mini-button[aria-pressed="true"],
+    .mode-button[aria-pressed="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+      outline: none;
+    }
+
+    .mode-button {
+      min-width: 0;
+      flex-direction: column;
+      font-size: 11px;
+    }
+
+    .button-row {
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .action-button { flex: 1 1 46%; }
+
+    .mini-button {
+      width: 38px;
+      min-height: 36px;
+      padding: 0;
+    }
+
+    .mini-button:disabled,
+    .action-button:disabled {
+      cursor: default;
+      opacity: 0.35;
+    }
+
+    .stepper { gap: 7px; }
+
+    .stepper-output {
+      min-width: 38px;
+      color: var(--ink);
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .build-status {
+      min-height: 16px;
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .selection-ring {
+      color: var(--accent);
+    }
+
+    .tool-button {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    [data-dev-only][hidden] {
+      display: none !important;
+    }
+
+    .tool-button:hover,
+    .tool-button:focus-visible,
+    .tool-button[aria-pressed="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+      outline: none;
+    }
+
+    .tool-button::after {
+      content: attr(data-tip);
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: max-content;
+      max-width: 180px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: var(--panel);
+      color: var(--ink);
+      font-size: 12px;
+      opacity: 0;
+      transform: translateY(-3px);
+      pointer-events: none;
+      transition: opacity 150ms ease, transform 150ms ease;
+    }
+
+    .tool-button:hover::after,
+    .tool-button:focus-visible::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .scene-readout {
+      position: absolute;
+      left: 24px;
+      bottom: 22px;
+      z-index: 3;
+      min-width: 220px;
+      max-width: min(420px, calc(100% - 48px));
+      padding: 12px 14px;
+      border-left: 2px solid var(--accent);
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .scene-readout strong {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .scene-readout span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .combat-hud,
+    .enemy-hud {
+      position: absolute;
+      z-index: 3;
+      min-width: 220px;
+      padding: 11px 13px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .combat-hud {
+      top: 104px;
+      left: 24px;
+    }
+
+    .enemy-hud {
+      top: 22px;
+      left: 50%;
+      width: min(300px, calc(100% - 520px));
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .enemy-hud.boss-active {
+      border-color: rgba(255, 159, 50, 0.78);
+      box-shadow: 0 0 0 1px rgba(216, 92, 255, 0.2), 0 10px 34px rgba(0, 0, 0, 0.3);
+    }
+
+    .enemy-hud.boss-active .health-track span {
+      background: #ff6738;
+    }
+
+    .combat-hud[hidden],
+    .enemy-hud[hidden],
+    .combat-actions[hidden],
+    .combat-message[hidden],
+    .inventory-panel[hidden],
+    .inventory-slot[hidden],
+    .equipment-panel[hidden],
+    .reward-panel[hidden],
+    .supply-panel[hidden],
+    .interaction-prompt[hidden] { display: none; }
+
+    .hud-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 7px;
+    }
+
+    .hud-line strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 17px;
+      font-weight: 500;
+    }
+
+    .hud-line span {
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hud-values,
+    .coin-readout {
+      display: flex;
+      align-items: center;
+    }
+
+    .hud-values { gap: 10px; }
+
+    .coin-readout {
+      gap: 4px;
+      color: #e7c56c;
+    }
+
+    .coin-readout svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 1.8;
+    }
+
+    .coin-readout.is-pulsing {
+      animation: coin-pop 220ms ease-out;
+    }
+
+    @keyframes coin-pop {
+      50% { color: #fff0a4; transform: scale(1.18); }
+    }
+
+    .health-track,
+    .stamina-track {
+      width: 100%;
+      height: 7px;
+      overflow: hidden;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .health-track span,
+    .stamina-track span {
+      display: block;
+      width: 100%;
+      height: 100%;
+      transform-origin: left center;
+      transition: transform 160ms ease;
+    }
+
+    .health-track span { background: #d96253; }
+    .stamina-track { height: 4px; margin-top: 6px; }
+    .stamina-track span { background: #e7c56c; }
+
+    .wave-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 9px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .combat-actions {
+      position: absolute;
+      right: 24px;
+      bottom: 24px;
+      z-index: 5;
+      display: flex;
+      align-items: end;
+      gap: 10px;
+    }
+
+    .combat-button {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-strong);
+      color: var(--ink);
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    .combat-button.primary {
+      width: 66px;
+      height: 66px;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .combat-button[aria-pressed="true"] {
+      border-color: #91b9d8;
+      background: rgba(50, 81, 97, 0.94);
+      color: #d7ecfb;
+    }
+
+    .combat-button:disabled {
+      cursor: default;
+      opacity: 0.48;
+    }
+
+    .combat-button:hover,
+    .combat-button:focus-visible,
+    .combat-button.is-active {
+      border-color: var(--accent);
+      color: var(--accent);
+      outline: none;
+    }
+
+    .combat-button.is-charging {
+      border-color: #73dfff;
+      color: #ffe26d;
+      box-shadow: 0 0 0 2px rgb(255 226 109 / 18%), 0 0 22px rgb(82 207 255 / 48%);
+      animation: attack-charge-pulse 0.72s ease-in-out infinite alternate;
+    }
+
+    @keyframes attack-charge-pulse {
+      from { transform: translateY(0) scale(1); }
+      to { transform: translateY(-1px) scale(1.06); }
+    }
+
+    .combat-button::after {
+      content: attr(data-tip);
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      width: max-content;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: var(--panel-strong);
+      color: var(--ink);
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(3px);
+      transition: opacity 150ms ease, transform 150ms ease;
+    }
+
+    .combat-button:hover::after,
+    .combat-button:focus-visible::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .combat-message {
+      position: absolute;
+      top: 47%;
+      left: 50%;
+      z-index: 5;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(26px, 4vw, 48px);
+      text-shadow: 0 3px 18px rgba(0, 0, 0, 0.8);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .level-transition {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+      display: grid;
+      place-items: center;
+      background: #101719;
+      color: var(--ink);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .level-transition[hidden] { display: none; }
+
+    .level-transition-copy {
+      display: grid;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .level-transition-copy span {
+      color: var(--accent);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .level-transition-copy strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 5vw, 58px);
+      font-weight: 400;
+    }
+
+    .combat-stick {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      z-index: 5;
+      display: none;
+      width: 104px;
+      height: 104px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      touch-action: none;
+      backdrop-filter: blur(10px);
+    }
+
+    .combat-stick::before,
+    .combat-stick::after {
+      content: "";
+      position: absolute;
+      background: var(--line);
+      pointer-events: none;
+    }
+
+    .combat-stick::before {
+      top: 14px;
+      bottom: 14px;
+      left: 50%;
+      width: 1px;
+    }
+
+    .combat-stick::after {
+      top: 50%;
+      right: 14px;
+      left: 14px;
+      height: 1px;
+    }
+
+    .combat-stick-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      background: var(--panel-strong);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .inventory-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 7;
+      width: min(520px, calc(100% - 32px));
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-strong);
+      box-shadow: 0 20px 70px rgba(0, 0, 0, 0.42);
+      transform: translate(-50%, -50%);
+      backdrop-filter: blur(14px);
+    }
+
+    body.equipment-open .inventory-panel {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .equipment-panel {
+      position: absolute;
+      top: 76px;
+      right: 20px;
+      bottom: 22px;
+      z-index: 7;
+      display: flex;
+      width: 326px;
+      min-height: 0;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      overflow-y: auto;
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      background: var(--panel-strong);
+      box-shadow: 0 20px 70px rgba(0, 0, 0, 0.38);
+      backdrop-filter: blur(14px);
+    }
+
+    .equipment-header,
+    .equipment-header-actions,
+    .equipment-control,
+    .equipment-actions {
+      display: flex;
+      align-items: center;
+    }
+
+    .equipment-header {
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .equipment-header h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 500;
+    }
+
+    .equipment-header-actions { gap: 6px; }
+
+    .equipment-tabs,
+    .equipment-views {
+      display: grid;
+      gap: 5px;
+    }
+
+    .equipment-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .equipment-views { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .equipment-animation {
+      display: grid;
+      gap: 8px;
+      padding-bottom: 2px;
+    }
+
+    .equipment-animation-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 38px;
+      gap: 6px;
+    }
+
+    .equipment-animation-row .asset-select,
+    .equipment-animation-row .mini-button { min-height: 38px; }
+
+    [data-preview-icon][hidden] { display: none; }
+
+    .equipment-animation .equipment-control {
+      grid-template-columns: 44px minmax(0, 1fr) 54px;
+    }
+
+    .equipment-tab,
+    .equipment-view {
+      display: inline-flex;
+      min-width: 0;
+      min-height: 36px;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(4, 9, 10, 0.46);
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .equipment-tab:hover,
+    .equipment-tab:focus-visible,
+    .equipment-tab[aria-pressed="true"],
+    .equipment-view:hover,
+    .equipment-view:focus-visible,
+    .equipment-view[aria-pressed="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+      outline: none;
+    }
+
+    .equipment-controls {
+      display: grid;
+      gap: 8px;
+      padding-block: 2px;
+    }
+
+    .equipment-control {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) 54px;
+      gap: 8px;
+    }
+
+    .equipment-control label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .equipment-control input[type="range"] {
+      width: 100%;
+      min-width: 0;
+      accent-color: var(--accent);
+    }
+
+    .equipment-control output {
+      color: var(--ink);
+      font-size: 11px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .equipment-group-label {
+      margin: 2px 0 -2px;
+      color: var(--accent);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .attack-fx-section {
+      display: grid;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .attack-fx-controls {
+      display: grid;
+      gap: 8px;
+    }
+
+    .attack-fx-controls .equipment-control {
+      grid-template-columns: 46px minmax(0, 1fr) 54px;
+    }
+
+    .attack-fx-section.is-disabled .attack-fx-controls {
+      opacity: 0.42;
+    }
+
+    .combo-flow-section,
+    .horizontal-sweep-section,
+    .attack-speed-section,
+    .attack-feel-section {
+      display: grid;
+      gap: 10px;
+      padding: 12px 0;
+      border-top: 1px solid rgba(231, 197, 108, 0.2);
+      border-bottom: 1px solid rgba(231, 197, 108, 0.2);
+    }
+
+    .combo-flow-section[hidden],
+    .horizontal-sweep-section[hidden],
+    .attack-speed-section[hidden],
+    .attack-feel-section[hidden] {
+      display: none;
+    }
+
+    .combo-flow-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .combo-order-output {
+      min-width: 0;
+      color: #f3df9b;
+      font-size: 12px;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+
+    .weapon-glow-section[hidden] {
+      display: none;
+    }
+
+    .equipment-toggle {
+      display: flex;
+      min-height: 34px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .equipment-toggle input {
+      width: 34px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .equipment-toggle[hidden] { display: none; }
+
+    .equipment-color {
+      display: flex;
+      min-height: 34px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .equipment-color input {
+      width: 34px;
+      height: 26px;
+      padding: 2px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel);
+      cursor: pointer;
+    }
+
+    .equipment-actions {
+      gap: 6px;
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .equipment-actions .action-button { flex-basis: 0; }
+
+    .equipment-status {
+      min-height: 16px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .reward-panel,
+    .supply-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 8;
+      width: min(620px, calc(100% - 32px));
+      padding: 20px;
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      background: var(--panel-strong);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.52);
+      transform: translate(-50%, -50%);
+      backdrop-filter: blur(16px);
+    }
+
+    .reward-panel h2,
+    .supply-panel h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .reward-panel > p,
+    .supply-panel > p {
+      margin: 5px 0 17px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .supply-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.35;
+    }
+
+    .reward-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .reward-option {
+      display: grid;
+      min-height: 138px;
+      align-content: space-between;
+      gap: 18px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .reward-option:hover,
+    .reward-option:focus-visible,
+    .reward-option.is-controller-focus {
+      border-color: var(--accent);
+      background: rgba(231, 197, 108, 0.08);
+      outline: none;
+    }
+
+    .reward-option-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent);
+    }
+
+    .reward-option-head svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .reward-option strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 19px;
+      font-weight: 500;
+    }
+
+    .reward-option span:last-child {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .supply-panel { width: min(780px, calc(100% - 32px)); }
+
+    .supply-head,
+    .supply-actions,
+    .supply-price {
+      display: flex;
+      align-items: center;
+    }
+
+    .supply-head {
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .supply-coins {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .supply-options {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .supply-option {
+      display: grid;
+      min-height: 164px;
+      align-content: space-between;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .supply-option:hover,
+    .supply-option:focus-visible,
+    .supply-option.is-controller-focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .supply-option:disabled {
+      cursor: default;
+      opacity: 0.42;
+    }
+
+    .supply-option-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+    }
+
+    .supply-option-head strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 17px;
+      font-weight: 500;
+    }
+
+    .supply-option-detail {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .supply-price {
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    .supply-actions {
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 13px;
+      border-top: 1px solid var(--line);
+    }
+
+    .supply-status {
+      min-height: 16px;
+      margin-right: auto;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .interaction-prompt {
+      position: absolute;
+      bottom: 104px;
+      left: 50%;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--panel-strong);
+      color: var(--ink);
+      font-size: 13px;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .interaction-prompt kbd {
+      display: grid;
+      width: 24px;
+      height: 24px;
+      place-items: center;
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      color: var(--accent);
+      font: inherit;
+    }
+
+    .inventory-header,
+    .inventory-slot-head,
+    .inventory-detail {
+      display: flex;
+      align-items: center;
+    }
+
+    .inventory-header {
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .inventory-header-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .inventory-header h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 22px;
+      font-weight: 500;
+    }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .inventory-slot {
+      display: grid;
+      min-height: 94px;
+      align-content: space-between;
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .inventory-slot:hover,
+    .inventory-slot:focus-visible,
+    .inventory-slot.is-controller-focus,
+    .inventory-slot.is-selected {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .inventory-slot:disabled {
+      cursor: default;
+      opacity: 0.48;
+    }
+
+    .inventory-slot-head {
+      justify-content: space-between;
+      color: var(--accent);
+    }
+
+    .inventory-slot strong {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .inventory-slot span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .inventory-detail {
+      min-height: 38px;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 14px;
+      padding-top: 13px;
+      border-top: 1px solid var(--line);
+    }
+
+    .inventory-detail strong {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .inventory-detail span {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    body.inventory-open::after,
+    body.reward-open::after,
+    body.supply-open::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      background: rgba(7, 11, 12, 0.46);
+      pointer-events: none;
+    }
+
+    body.equipment-open.inventory-open::after { display: none; }
+
+    body.game-active .scene-readout { display: none; }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      background: #172124;
+      transition: opacity 500ms ease;
+    }
+
+    .loading.is-done {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-line {
+      width: min(280px, 70vw);
+      height: 3px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .loading-line span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: var(--accent);
+      transition: width 180ms ease;
+    }
+
+    @media (max-width: 560px) {
+      .start-screen {
+        align-content: start;
+        padding: 22px 18px 30px;
+        overflow-y: auto;
+      }
+      .start-screen h1 { font-size: 52px; }
+      .save-slot-picker { grid-template-columns: 1fr; }
+      .save-slot-card { min-height: 90px; }
+      .save-slot-detail { min-height: 0; }
+      .scene-title { top: 16px; left: 16px; }
+      .scene-title p { display: none; }
+      .toolbar {
+        top: 14px;
+        right: 14px;
+        width: 176px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .tool-button { width: 38px; height: 38px; }
+      .scene-readout { left: 16px; bottom: 16px; max-width: calc(100% - 32px); }
+      .combat-hud {
+        top: 66px;
+        left: 12px;
+        min-width: 168px;
+        width: 44vw;
+        padding: 9px 10px;
+      }
+      .enemy-hud {
+        top: 174px;
+        left: 12px;
+        width: min(250px, calc(100% - 24px));
+        transform: none;
+      }
+      .combat-actions { right: 14px; bottom: 14px; }
+      .combat-actions { gap: 7px; }
+      .combat-button { width: 50px; height: 50px; }
+      .combat-button.primary { width: 62px; height: 62px; }
+      .combat-stick:not([hidden]) { display: block; }
+      .inventory-panel { padding: 14px; }
+      .inventory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .inventory-slot { min-height: 82px; padding: 10px; }
+      .reward-panel { padding: 15px; }
+      .reward-options { grid-template-columns: 1fr; }
+      .reward-option { min-height: 104px; padding: 13px; }
+      .supply-panel { padding: 15px; }
+      .supply-options { grid-template-columns: 1fr; max-height: 48vh; overflow-y: auto; }
+      .supply-option { min-height: 118px; }
+      .interaction-prompt { bottom: 124px; }
+      .equipment-panel {
+        top: auto;
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        width: auto;
+        max-height: 54vh;
+        padding: 13px;
+      }
+      .build-panel {
+        top: auto;
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        width: auto;
+        max-height: 48vh;
+        padding: 13px;
+      }
+      body.build-open .scene-readout { display: none; }
+    }
+
+    @media (max-width: 420px) {
+      .scene-title h1 { font-size: 26px; }
+      .toolbar {
+        width: 160px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .tool-button { width: 34px; height: 34px; }
+      .combat-actions { gap: 5px; }
+      .combat-button { width: 45px; height: 45px; }
+      .combat-button.primary { width: 56px; height: 56px; }
+    }
+
+    @media (max-width: 360px) {
+      .combat-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 50px);
+        align-items: center;
+      }
+      .combat-button,
+      .combat-button.primary {
+        width: 50px;
+        height: 50px;
+      }
+      .combat-stick {
+        width: 92px;
+        height: 92px;
+      }
+      .inventory-detail { align-items: flex-start; flex-direction: column; gap: 4px; }
+      .inventory-detail span { text-align: left; }
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <main id="scene-shell">
+    <canvas id="scene-canvas" tabindex="0" aria-label="Interaktive 3D-Kampfszene von Wachtbruch"></canvas>
+
+    <section class="start-screen" id="start-screen" role="dialog" aria-modal="true" aria-labelledby="start-screen-title" hidden>
+      <div class="start-screen-copy">
+        <span class="screen-kicker">Die Ruinen von Ahnhoehe</span>
+        <h1 id="start-screen-title">Wachtbruch</h1>
+        <p>Steig hinab, halte die alte Wacht und finde heraus, was unter ihren Mauern noch atmet.</p>
+        <div class="save-slot-picker" id="save-slot-picker" role="group" aria-label="Spielstand waehlen">
+          <button class="save-slot-card" type="button" data-save-slot="1" aria-pressed="true">
+            <span class="save-slot-head"><span>Slot 1</span><i data-lucide="save" aria-hidden="true"></i></span>
+            <strong data-save-slot-title>Leer</strong>
+            <span class="save-slot-detail" data-save-slot-detail>Bereit fuer eine neue Wacht.</span>
+            <span class="save-slot-meta"><span data-save-slot-time>0 min</span><span data-save-slot-date>Neu</span></span>
+          </button>
+          <button class="save-slot-card" type="button" data-save-slot="2" aria-pressed="false">
+            <span class="save-slot-head"><span>Slot 2</span><i data-lucide="save" aria-hidden="true"></i></span>
+            <strong data-save-slot-title>Leer</strong>
+            <span class="save-slot-detail" data-save-slot-detail>Bereit fuer eine neue Wacht.</span>
+            <span class="save-slot-meta"><span data-save-slot-time>0 min</span><span data-save-slot-date>Neu</span></span>
+          </button>
+          <button class="save-slot-card" type="button" data-save-slot="3" aria-pressed="false">
+            <span class="save-slot-head"><span>Slot 3</span><i data-lucide="save" aria-hidden="true"></i></span>
+            <strong data-save-slot-title>Leer</strong>
+            <span class="save-slot-detail" data-save-slot-detail>Bereit fuer eine neue Wacht.</span>
+            <span class="save-slot-meta"><span data-save-slot-time>0 min</span><span data-save-slot-date>Neu</span></span>
+          </button>
+        </div>
+        <div class="screen-actions">
+          <button class="screen-action primary" id="start-game" type="button">
+            <i data-lucide="play" aria-hidden="true"></i><span>Slot laden</span>
+          </button>
+          <button class="screen-action" id="start-new-game" type="button">
+            <i data-lucide="plus" aria-hidden="true"></i><span>Neues Spiel</span>
+          </button>
+          <button class="screen-action" id="start-delete-slot" type="button">
+            <i data-lucide="trash-2" aria-hidden="true"></i><span>Loeschen</span>
+          </button>
+          <button class="screen-action" id="start-workshop" type="button">
+            <i data-lucide="hammer" aria-hidden="true"></i><span>Werkstatt</span>
+          </button>
+        </div>
+        <p class="save-slot-status" id="start-save-status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <header class="scene-title">
+      <h1>Wachtbruch</h1>
+      <p>Die Ruinen von Ahnhoehe</p>
+    </header>
+
+    <nav class="toolbar" aria-label="Szenensteuerung">
+      <button class="tool-button" id="play-toggle" type="button" aria-label="Echtzeitkampf umschalten" aria-pressed="false" data-tip="Echtzeitkampf">
+        <i data-lucide="swords" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button" id="build-toggle" type="button" aria-label="Setzsystem umschalten" aria-pressed="false" data-tip="Setzsystem" data-dev-only hidden>
+        <i data-lucide="hammer" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button player-menu-shortcut" id="inventory-toggle" type="button" aria-label="Inventar umschalten" aria-pressed="false" data-tip="Inventar" hidden>
+        <i data-lucide="backpack" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button" id="time-toggle" type="button" aria-label="Tageszeit wechseln" aria-pressed="false" data-tip="Tageszeit" data-dev-only hidden>
+        <i data-lucide="moon" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button" id="shader-toggle" type="button" aria-label="Pixellicht umschalten" aria-pressed="true" data-tip="Pixellicht" data-dev-only hidden>
+        <i data-lucide="sparkles" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button" id="rain-toggle" type="button" aria-label="Regen umschalten" aria-pressed="false" data-tip="Regen" data-dev-only hidden>
+        <i data-lucide="cloud-rain" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button player-menu-shortcut" id="music-toggle" type="button" aria-label="Musik umschalten" aria-pressed="true" data-tip="Musik">
+        <i data-lucide="music-2" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button" id="camera-reset" type="button" aria-label="Kamera zuruecksetzen" data-tip="Kamera zuruecksetzen" data-dev-only hidden>
+        <i data-lucide="focus" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button player-menu-shortcut" id="fullscreen-toggle" type="button" aria-label="Vollbild umschalten" data-tip="Vollbild">
+        <i data-lucide="maximize" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button" id="game-menu-toggle" type="button" aria-label="Spielmenue oeffnen" aria-expanded="false" data-tip="Spielmenue" hidden>
+        <i data-lucide="menu" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button" id="qa-toggle" type="button" aria-label="Pruefmodus oeffnen" aria-expanded="false" data-tip="Pruefmodus" data-dev-only hidden>
+        <i data-lucide="flask-conical" aria-hidden="true"></i>
+      </button>
+      <button class="tool-button" id="developer-toggle" type="button" aria-label="Entwicklerwerkzeuge oeffnen" aria-pressed="false" data-tip="Dev-Werkzeuge">
+        <i data-lucide="code-2" aria-hidden="true"></i>
+      </button>
+    </nav>
+
+    <section class="game-menu" id="game-menu" role="dialog" aria-modal="true" aria-labelledby="game-menu-title" hidden>
+      <div class="game-menu-surface">
+        <header class="game-menu-header">
+          <h2 id="game-menu-title">Wachtmenue</h2>
+          <button class="mini-button" id="game-menu-close" type="button" aria-label="Spielmenue schliessen">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </header>
+        <nav class="game-menu-actions" aria-label="Spielaktionen">
+          <button class="game-menu-item" type="button" data-game-menu-action="resume">
+            <i data-lucide="play" aria-hidden="true"></i><span>Weiterspielen</span><span class="game-menu-item-status"></span>
+          </button>
+          <button class="game-menu-item" type="button" data-game-menu-action="inventory">
+            <i data-lucide="backpack" aria-hidden="true"></i><span>Inventar</span><span class="game-menu-item-status"></span>
+          </button>
+          <button class="game-menu-item" id="game-menu-save" type="button" data-game-menu-action="save">
+            <i data-lucide="save" aria-hidden="true"></i><span>Speichern</span><span class="game-menu-item-status" id="game-menu-save-status">Slot</span>
+          </button>
+          <button class="game-menu-item" type="button" data-game-menu-action="music">
+            <i data-lucide="music-2" aria-hidden="true"></i><span>Musik</span><span class="game-menu-item-status" id="game-menu-music-status">An</span>
+          </button>
+          <button class="game-menu-item" type="button" data-game-menu-action="fullscreen">
+            <i data-lucide="maximize" aria-hidden="true"></i><span>Vollbild</span><span class="game-menu-item-status" id="game-menu-fullscreen-status">Aus</span>
+          </button>
+          <button class="game-menu-item" type="button" data-game-menu-action="title">
+            <i data-lucide="door-open" aria-hidden="true"></i><span>Zum Titel</span><span class="game-menu-item-status"></span>
+          </button>
+        </nav>
+        <div class="game-menu-foot">Wachtbruch</div>
+      </div>
+    </section>
+
+    <section class="qa-panel" id="qa-panel" role="dialog" aria-labelledby="qa-title" hidden>
+      <header class="qa-panel-header">
+        <div>
+          <h2 id="qa-title">Pruefmodus</h2>
+          <p>Deterministischer Kernlauf</p>
+        </div>
+        <button class="mini-button" id="qa-close" type="button" aria-label="Pruefmodus schliessen">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </header>
+      <label class="equipment-toggle" for="qa-invulnerable">
+        <span>Ra unverwundbar</span>
+        <input id="qa-invulnerable" type="checkbox">
+      </label>
+      <section class="qa-lab" aria-labelledby="qa-lab-title">
+        <div class="qa-lab-header">
+          <div class="equipment-group-label" id="qa-lab-title">Kampflabor</div>
+          <span class="qa-lab-state" id="qa-lab-state">Bereit</span>
+        </div>
+        <div class="qa-actions" role="group" aria-label="Kampflabor steuern">
+          <button class="action-button" id="qa-lab-toggle" type="button">
+            <i data-lucide="swords" aria-hidden="true"></i><span>Duell starten</span>
+          </button>
+          <button class="action-button" id="qa-lab-reset-duel" type="button" disabled>
+            <i data-lucide="refresh-cw" aria-hidden="true"></i><span>Duell neu</span>
+          </button>
+        </div>
+        <label class="field-group" for="qa-lab-attack">
+          <span class="field-label">Schwertangriff</span>
+          <select class="asset-select" id="qa-lab-attack"></select>
+        </label>
+        <div class="qa-lab-controls">
+          <div class="equipment-group-label">Ra</div>
+          <div class="equipment-control">
+            <label for="qa-lab-speed">Tempo</label>
+            <input id="qa-lab-speed" type="range" min="0.55" max="1.60" step="0.05" data-combat-lab-player="speed">
+            <output id="qa-lab-speed-output" for="qa-lab-speed">1.00x</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-range">Reichweite</label>
+            <input id="qa-lab-range" type="range" min="0.70" max="1.45" step="0.01" data-combat-lab-player="rangeScale">
+            <output id="qa-lab-range-output" for="qa-lab-range">100%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-hit-start">Treffer ab</label>
+            <input id="qa-lab-hit-start" type="range" min="0.05" max="0.85" step="0.01" data-combat-lab-player="hitStart">
+            <output id="qa-lab-hit-start-output" for="qa-lab-hit-start">25%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-hit-end">Treffer bis</label>
+            <input id="qa-lab-hit-end" type="range" min="0.12" max="0.95" step="0.01" data-combat-lab-player="hitEnd">
+            <output id="qa-lab-hit-end-output" for="qa-lab-hit-end">68%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-lunge">Vorstoss</label>
+            <input id="qa-lab-lunge" type="range" min="0" max="1.60" step="0.01" data-combat-lab-player="lungeScale">
+            <output id="qa-lab-lunge-output" for="qa-lab-lunge">100%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-impact">Wucht</label>
+            <input id="qa-lab-impact" type="range" min="0.60" max="1.80" step="0.01" data-combat-lab-player="impactScale">
+            <output id="qa-lab-impact-output" for="qa-lab-impact">100%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-pause">Kombopause</label>
+            <input id="qa-lab-pause" type="range" min="0" max="0.45" step="0.01" data-combat-lab-player="comboPause">
+            <output id="qa-lab-pause-output" for="qa-lab-pause">0.04 s</output>
+          </div>
+          <div class="equipment-group-label">Trefferwirkung</div>
+          <div class="equipment-control">
+            <label for="qa-lab-hit-stop">Hitstop</label>
+            <input id="qa-lab-hit-stop" type="range" min="0.35" max="1.80" step="0.05" data-combat-lab-impact="hitStopScale">
+            <output id="qa-lab-hit-stop-output" for="qa-lab-hit-stop">1.00x</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-slow">Zeitlupe</label>
+            <input id="qa-lab-slow" type="range" min="0.35" max="1.80" step="0.05" data-combat-lab-impact="slowMotionScale">
+            <output id="qa-lab-slow-output" for="qa-lab-slow">1.00x</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-shake">Kamera</label>
+            <input id="qa-lab-shake" type="range" min="0" max="1.80" step="0.05" data-combat-lab-impact="cameraShakeScale">
+            <output id="qa-lab-shake-output" for="qa-lab-shake">1.00x</output>
+          </div>
+          <div class="equipment-group-label">Schwert-Ork</div>
+          <div class="equipment-control">
+            <label for="qa-lab-windup">Ausholen</label>
+            <input id="qa-lab-windup" type="range" min="0.12" max="0.90" step="0.01" data-combat-lab-enemy="windup">
+            <output id="qa-lab-windup-output" for="qa-lab-windup">0.38 s</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-active">Aktiv</label>
+            <input id="qa-lab-active" type="range" min="0.16" max="0.65" step="0.01" data-combat-lab-enemy="active">
+            <output id="qa-lab-active-output" for="qa-lab-active">0.40 s</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-recovery">Erholung</label>
+            <input id="qa-lab-recovery" type="range" min="0.08" max="0.75" step="0.01" data-combat-lab-enemy="recovery">
+            <output id="qa-lab-recovery-output" for="qa-lab-recovery">0.18 s</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-cooldown">Rhythmus</label>
+            <input id="qa-lab-cooldown" type="range" min="0.10" max="1.80" step="0.01" data-combat-lab-enemy="cooldown">
+            <output id="qa-lab-cooldown-output" for="qa-lab-cooldown">0.76 s</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-trigger-range">Startdist.</label>
+            <input id="qa-lab-trigger-range" type="range" min="0.75" max="1.45" step="0.01" data-combat-lab-enemy="triggerRangeScale">
+            <output id="qa-lab-trigger-range-output" for="qa-lab-trigger-range">100%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="qa-lab-hit-range">Treffdist.</label>
+            <input id="qa-lab-hit-range" type="range" min="0.75" max="1.45" step="0.01" data-combat-lab-enemy="hitRangeScale">
+            <output id="qa-lab-hit-range-output" for="qa-lab-hit-range">100%</output>
+          </div>
+        </div>
+        <div class="qa-lab-metrics" id="qa-lab-metrics">
+          <span>Angriffe <strong>0</strong></span>
+          <span>Treffer <strong>0</strong></span>
+          <span>Erhalten <strong>0</strong></span>
+        </div>
+        <div class="qa-actions" role="group" aria-label="Kampfprofil verwalten">
+          <button class="action-button" id="qa-lab-save" type="button">
+            <i data-lucide="save" aria-hidden="true"></i><span>Speichern</span>
+          </button>
+          <button class="action-button" id="qa-lab-defaults" type="button">
+            <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Standard</span>
+          </button>
+          <button class="action-button" id="qa-lab-export" type="button">
+            <i data-lucide="download" aria-hidden="true"></i><span>Godot-Profil</span>
+          </button>
+        </div>
+      </section>
+      <label class="field-group" for="qa-room">
+        <span class="field-label">Pruefraum</span>
+        <select class="asset-select" id="qa-room"></select>
+      </label>
+      <label class="field-group" for="qa-wave">
+        <span class="field-label">Pruefwelle</span>
+        <select class="asset-select" id="qa-wave"></select>
+      </label>
+      <div class="qa-actions" role="group" aria-label="Pruefaktionen">
+        <button class="action-button" id="qa-load-room" type="button"><i data-lucide="map-pin" aria-hidden="true"></i><span>Raum laden</span></button>
+        <button class="action-button" id="qa-start-wave" type="button"><i data-lucide="play" aria-hidden="true"></i><span>Welle starten</span></button>
+        <button class="action-button" id="qa-finish-wave" type="button"><i data-lucide="check" aria-hidden="true"></i><span>Welle bestehen</span></button>
+        <button class="action-button" id="qa-unlock-exit" type="button"><i data-lucide="door-open" aria-hidden="true"></i><span>Ausgang frei</span></button>
+        <button class="action-button" id="qa-reset-room" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Raum zuruecksetzen</span></button>
+      </div>
+      <div class="qa-status" id="qa-status" role="status">Bereit fuer einen kontrollierten Lauf</div>
+    </section>
+
+    <section class="build-panel" id="build-panel" aria-label="Aethoria Setzsystem" hidden>
+      <div class="build-panel-header">
+        <div>
+          <h2>Setzsystem</h2>
+          <span class="field-label">Raster 16 x 16</span>
+        </div>
+        <div class="build-panel-header-actions">
+          <button class="mini-button" id="entrance-landscape-toggle" type="button" aria-label="Gruenflaeche umschalten" aria-pressed="true" title="Gruenflaeche">
+            <i data-lucide="trees" aria-hidden="true"></i>
+          </button>
+          <button class="mini-button" id="diagnostics-toggle" type="button" aria-label="Diagnoseansicht umschalten" aria-pressed="false" title="Kollisionen und Reichweiten">
+            <i data-lucide="scan-line" aria-hidden="true"></i>
+          </button>
+          <button class="mini-button" id="grid-toggle" type="button" aria-label="Raster umschalten" aria-pressed="true" title="Raster">
+            <i data-lucide="grid-3x3" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="diagnostics-legend" id="diagnostics-legend" role="group" aria-label="Farblegende der Diagnoseansicht" hidden>
+        <span class="diagnostics-key" style="color:#42dcff"><i class="diagnostics-swatch"></i>Kollision</span>
+        <span class="diagnostics-key" style="color:#ffe36e"><i class="diagnostics-swatch"></i>Spieler</span>
+        <span class="diagnostics-key" style="color:#d56bff"><i class="diagnostics-swatch"></i>Gegner</span>
+        <span class="diagnostics-key" style="color:#ff3f85"><i class="diagnostics-swatch"></i>Boss</span>
+        <span class="diagnostics-key" style="color:#ff5138"><i class="diagnostics-swatch"></i>Falle</span>
+        <span class="diagnostics-key" style="color:#ffad42"><i class="diagnostics-swatch"></i>Licht</span>
+        <span class="diagnostics-key" style="color:#6dff8c"><i class="diagnostics-swatch"></i>Trigger</span>
+      </div>
+
+      <div class="field-group">
+        <div class="field-head">
+          <label class="field-label" for="room-select">Raum</label>
+          <span class="field-value" id="room-count">3 Raeume</span>
+        </div>
+        <select class="asset-select" id="room-select" aria-label="Raum auswaehlen"></select>
+        <div class="button-row" role="group" aria-label="Raumaktionen">
+          <button class="mini-button" id="room-new" type="button" aria-label="Neuen Raum anlegen" title="Neuer Raum">
+            <i data-lucide="plus" aria-hidden="true"></i>
+          </button>
+          <button class="mini-button" id="room-duplicate" type="button" aria-label="Raum duplizieren" title="Raum duplizieren">
+            <i data-lucide="copy" aria-hidden="true"></i>
+          </button>
+          <button class="mini-button" id="room-rename" type="button" aria-label="Raum umbenennen" title="Raum umbenennen">
+            <i data-lucide="pencil" aria-hidden="true"></i>
+          </button>
+          <button class="mini-button" id="room-delete" type="button" aria-label="Raum loeschen" title="Raum loeschen">
+            <i data-lucide="trash-2" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="editor-view-tabs" role="tablist" aria-label="Editoransicht">
+        <button class="editor-view-tab" id="build-view-tab" type="button" role="tab" aria-controls="build-editor-view" aria-selected="true" data-editor-view="build">
+          <i data-lucide="blocks" aria-hidden="true"></i><span>Bauen</span>
+        </button>
+        <button class="editor-view-tab" id="waves-view-tab" type="button" role="tab" aria-controls="wave-editor-view" aria-selected="false" data-editor-view="waves">
+          <i data-lucide="list-ordered" aria-hidden="true"></i><span>Wellen</span>
+        </button>
+      </div>
+
+      <div class="editor-view" id="build-editor-view" role="tabpanel" aria-labelledby="build-view-tab">
+        <div class="field-group">
+        <label class="field-label" for="asset-select">Asset</label>
+        <select class="asset-select" id="asset-select"></select>
+        </div>
+
+        <div class="field-group object-transform" id="object-transform" hidden>
+        <div class="field-head">
+          <span class="field-label">Objekt ausrichten</span>
+          <span class="field-value" id="transform-object-name"></span>
+        </div>
+        <label class="transform-control" for="transform-offset-x">
+          <span class="field-label">X</span>
+          <input id="transform-offset-x" type="range" min="-0.5" max="0.5" step="0.025" value="0">
+          <output for="transform-offset-x">0.00</output>
+        </label>
+        <label class="transform-control" for="transform-offset-z">
+          <span class="field-label">Z</span>
+          <input id="transform-offset-z" type="range" min="-0.5" max="0.5" step="0.025" value="0">
+          <output for="transform-offset-z">0.00</output>
+        </label>
+        <label class="transform-control" for="transform-rotation">
+          <span class="field-label">Drehung</span>
+          <input id="transform-rotation" type="range" min="-180" max="180" step="1" value="0">
+          <output for="transform-rotation">0°</output>
+        </label>
+        <label class="transform-control" for="transform-scale">
+          <span class="field-label">Größe</span>
+          <input id="transform-scale" type="range" min="0.35" max="3" step="0.025" value="1">
+          <output for="transform-scale">1.00</output>
+        </label>
+        <button class="action-button" id="transform-reset" type="button">
+          <i data-lucide="focus" aria-hidden="true"></i><span>Zentrieren</span>
+        </button>
+        </div>
+
+        <div class="field-group marker-properties" id="marker-properties" hidden>
+        <div class="field-head">
+          <span class="field-label">Raumlogik</span>
+          <span class="field-value" id="marker-kind"></span>
+        </div>
+        <label class="equipment-toggle" id="reward-chest-field" for="reward-chest-toggle" hidden>
+          <span>Siegestruhe dieses Raums</span>
+          <input id="reward-chest-toggle" type="checkbox">
+        </label>
+        <div class="chest-drop-settings trap-settings" id="chest-drop-settings" hidden>
+          <label class="marker-property" for="chest-drop-type">
+            <span class="field-label">Truheninhalt</span>
+            <select class="asset-select" id="chest-drop-type">
+              <option value="choice">Waffenwahl</option>
+              <option value="coins">Münzen</option>
+              <option value="sword">Schwert</option>
+              <option value="spear">Speer</option>
+              <option value="helmet">Wachthelm</option>
+              <option value="hook">Enterhaken</option>
+              <option value="healing">Heilung</option>
+            </select>
+          </label>
+          <label class="marker-property chest-drop-amount" id="chest-drop-amount-field" for="chest-drop-amount" hidden>
+            <span class="field-label">Münzmenge</span>
+            <input class="marker-number" id="chest-drop-amount" type="number" min="1" max="25" step="1" value="5">
+          </label>
+        </div>
+        <div class="trap-settings" id="trap-settings" hidden>
+          <label class="marker-property" for="trap-damage">
+            <span class="field-label">Schaden</span>
+            <input class="marker-number" id="trap-damage" type="number" min="1" max="6" step="1" value="1">
+          </label>
+          <label class="marker-property" for="trap-targets">
+            <span class="field-label">Zielgruppe</span>
+            <select class="asset-select" id="trap-targets">
+              <option value="both">Spieler und Gegner</option>
+              <option value="player">Nur Spieler</option>
+              <option value="enemies">Nur Gegner</option>
+            </select>
+          </label>
+          <label class="marker-property" for="trap-radius">
+            <span class="field-label">Treffer-Radius</span>
+            <input class="marker-number" id="trap-radius" type="number" min="0.5" max="6" step="0.1" value="0.8">
+          </label>
+          <label class="marker-property" for="trap-warning">
+            <span class="field-label">Warnzeit</span>
+            <input class="marker-number" id="trap-warning" type="number" min="0.15" max="2" step="0.05" value="0.5">
+          </label>
+          <label class="marker-property" for="trap-cooldown">
+            <span class="field-label">Abklingzeit</span>
+            <input class="marker-number" id="trap-cooldown" type="number" min="0.4" max="6" step="0.1" value="1.6">
+          </label>
+        </div>
+        <div class="enemy-wave-settings" id="enemy-wave-settings" hidden>
+          <label class="marker-property" for="enemy-wave-select">
+            <span class="field-label">Welle</span>
+            <select class="asset-select" id="enemy-wave-select"></select>
+          </label>
+          <label class="marker-property" for="enemy-spawn-delay">
+            <span class="field-label">Spawnverzoegerung</span>
+            <input class="marker-number" id="enemy-spawn-delay" type="number" min="0" max="20" step="0.1" value="0">
+          </label>
+        </div>
+        <label class="marker-property" id="marker-target-field" for="marker-target-room" hidden>
+          <span class="field-label">Zielraum</span>
+          <select class="asset-select" id="marker-target-room"></select>
+        </label>
+        <label class="marker-property" id="marker-condition-field" for="marker-condition" hidden>
+          <span class="field-label">Freigabe</span>
+          <select class="asset-select" id="marker-condition">
+            <option value="clear">Nach Raumkampf</option>
+            <option value="always">Sofort</option>
+          </select>
+        </label>
+        <label class="marker-property" id="marker-radius-field" for="marker-radius" hidden>
+          <span class="field-label">Ausloeser-Radius</span>
+          <input class="marker-number" id="marker-radius" type="number" min="0.5" max="12" step="0.25" value="2">
+        </label>
+        </div>
+
+        <div class="mode-group" role="group" aria-label="Werkzeug">
+        <button class="mode-button" type="button" data-mode="place" aria-pressed="true">
+          <i data-lucide="mouse-pointer-2" aria-hidden="true"></i><span>Setzen</span>
+        </button>
+        <button class="mode-button" type="button" data-mode="select" aria-pressed="false">
+          <i data-lucide="move-3d" aria-hidden="true"></i><span>Bewegen</span>
+        </button>
+        <button class="mode-button" type="button" data-mode="erase" aria-pressed="false">
+          <i data-lucide="eraser" aria-hidden="true"></i><span>Loeschen</span>
+        </button>
+        </div>
+
+        <div class="field-group">
+        <div class="field-head">
+          <span class="field-label">Ebene</span>
+          <span class="field-value">Hoehe in 16er-Schritten</span>
+        </div>
+        <div class="stepper">
+          <button class="mini-button" id="layer-down" type="button" aria-label="Ebene senken">
+            <i data-lucide="minus" aria-hidden="true"></i>
+          </button>
+          <output class="stepper-output" id="layer-output">0</output>
+          <button class="mini-button" id="layer-up" type="button" aria-label="Ebene anheben">
+            <i data-lucide="plus" aria-hidden="true"></i>
+          </button>
+          <button class="mini-button" id="rotate-left" type="button" aria-label="Nach links drehen">
+            <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+          </button>
+          <button class="mini-button" id="rotate-right" type="button" aria-label="Nach rechts drehen">
+            <i data-lucide="rotate-cw" aria-hidden="true"></i>
+          </button>
+        </div>
+        </div>
+
+        <div class="button-row" role="group" aria-label="Verlauf">
+        <button class="action-button" id="undo-button" type="button" aria-label="Rueckgaengig">
+          <i data-lucide="undo-2" aria-hidden="true"></i><span>Zurueck</span>
+        </button>
+        <button class="action-button" id="redo-button" type="button" aria-label="Wiederholen">
+          <i data-lucide="redo-2" aria-hidden="true"></i><span>Vor</span>
+        </button>
+        </div>
+      </div>
+
+      <div class="editor-view" id="wave-editor-view" role="tabpanel" aria-labelledby="waves-view-tab" hidden>
+        <div class="field-head">
+          <span class="field-label">Wellenplan</span>
+          <span class="field-value" id="wave-editor-summary">1 Welle</span>
+        </div>
+        <div class="wave-list" id="wave-list" role="listbox" aria-label="Wellen dieses Raums"></div>
+        <div class="button-row" role="group" aria-label="Wellenaktionen">
+          <button class="mini-button" id="wave-add" type="button" aria-label="Neue Welle" title="Neue Welle"><i data-lucide="plus" aria-hidden="true"></i></button>
+          <button class="mini-button" id="wave-duplicate" type="button" aria-label="Welle duplizieren" title="Welle duplizieren"><i data-lucide="copy" aria-hidden="true"></i></button>
+          <button class="mini-button" id="wave-up" type="button" aria-label="Welle nach oben" title="Welle nach oben"><i data-lucide="arrow-up" aria-hidden="true"></i></button>
+          <button class="mini-button" id="wave-down" type="button" aria-label="Welle nach unten" title="Welle nach unten"><i data-lucide="arrow-down" aria-hidden="true"></i></button>
+          <button class="mini-button" id="wave-delete" type="button" aria-label="Welle loeschen" title="Welle loeschen"><i data-lucide="trash-2" aria-hidden="true"></i></button>
+        </div>
+        <div class="wave-editor-fields">
+          <label class="marker-property" for="wave-name">
+            <span class="field-label">Name</span>
+            <input class="marker-number" id="wave-name" type="text" maxlength="40" value="Welle 1">
+          </label>
+          <label class="marker-property" for="wave-intermission">
+            <span class="field-label">Pause danach</span>
+            <input class="marker-number" id="wave-intermission" type="number" min="0.4" max="12" step="0.1" value="1.5">
+          </label>
+          <label class="marker-property" for="wave-reward-coins">
+            <span class="field-label">Bonusmuenzen</span>
+            <input class="marker-number" id="wave-reward-coins" type="number" min="0" max="25" step="1" value="0">
+          </label>
+          <label class="equipment-toggle" for="wave-boss">
+            <span>Bosswelle</span>
+            <input id="wave-boss" type="checkbox">
+          </label>
+        </div>
+        <p class="wave-hint">Ausgewaehlte Gegner werden dieser Welle zugeordnet. Die Reihenfolge bestimmt den Ablauf im Spiel.</p>
+      </div>
+
+      <div class="button-row" role="group" aria-label="Szenendaten">
+        <button class="action-button" id="save-button" type="button">
+          <i data-lucide="save" aria-hidden="true"></i><span>Speichern</span>
+        </button>
+        <button class="action-button" id="load-button" type="button">
+          <i data-lucide="folder-open" aria-hidden="true"></i><span>Laden</span>
+        </button>
+        <button class="action-button" id="export-button" type="button">
+          <i data-lucide="download" aria-hidden="true"></i><span>Export</span>
+        </button>
+        <button class="action-button" id="import-button" type="button">
+          <i data-lucide="upload" aria-hidden="true"></i><span>Import</span>
+        </button>
+        <button class="action-button" id="reset-layout" type="button">
+          <i data-lucide="land-plot" aria-hidden="true"></i><span>Ursprung</span>
+        </button>
+        <input id="import-file" type="file" accept="application/json,.json" hidden>
+      </div>
+
+      <div class="build-status" id="build-status" aria-live="polite">Bereit zum Setzen</div>
+    </section>
+
+    <aside class="scene-readout" aria-label="Auswahlstatus" aria-live="polite">
+      <strong id="selected-name">Ahnhoehe</strong>
+      <span id="selected-detail">25 freie CC0-Modelle in einer gemeinsamen Szene</span>
+    </aside>
+
+    <aside class="combat-hud" id="combat-hud" aria-label="Spielerstatus" hidden>
+      <div class="hud-line">
+        <strong>Ra</strong>
+        <div class="hud-values">
+          <span id="player-health-text">6 / 6</span>
+          <span class="coin-readout" id="coin-readout" role="status" aria-label="Alte Muenzen">
+            <i data-lucide="coins" aria-hidden="true"></i><span id="coin-count">0</span>
+          </span>
+        </div>
+      </div>
+      <div class="health-track" aria-hidden="true"><span id="player-health-fill"></span></div>
+      <div class="stamina-track" aria-hidden="true"><span id="player-stamina-fill"></span></div>
+      <div class="wave-line"><span id="wave-label">Betritt den Hof</span><span id="wave-count">Welle 1</span></div>
+    </aside>
+
+    <aside class="enemy-hud" id="enemy-hud" aria-label="Gegnerstatus" hidden>
+      <div class="hud-line">
+        <strong id="enemy-name">Ork-Spaeher</strong>
+        <span id="enemy-health-text">3 / 3</span>
+      </div>
+      <div class="health-track" aria-hidden="true"><span id="enemy-health-fill"></span></div>
+    </aside>
+
+    <nav class="combat-actions" id="combat-actions" aria-label="Kampfaktionen" hidden>
+      <button class="combat-button" id="shield-button" type="button" aria-label="Schild einsetzen" aria-pressed="false" data-tip="Schild">
+        <i data-lucide="shield" aria-hidden="true"></i>
+      </button>
+      <button class="combat-button" id="hook-button" type="button" aria-label="Enterhaken noch nicht gefunden" data-tip="Nicht gefunden" disabled>
+        <i data-lucide="anchor" aria-hidden="true"></i>
+      </button>
+      <button class="combat-button" id="dodge-button" type="button" aria-label="Ausweichen" data-tip="Ausweichen">
+        <i data-lucide="move-diagonal-2" aria-hidden="true"></i>
+      </button>
+      <button class="combat-button primary" id="attack-button" type="button" aria-label="Angreifen" data-tip="Angreifen">
+        <i data-lucide="sword" aria-hidden="true"></i>
+      </button>
+    </nav>
+
+    <section class="inventory-panel" id="inventory-panel" role="dialog" aria-modal="true" aria-labelledby="inventory-title" hidden>
+      <div class="inventory-header">
+        <h2 id="inventory-title">Inventar</h2>
+        <div class="inventory-header-actions">
+          <button class="mini-button" id="equipment-open" type="button" aria-label="Ausrüstung ausrichten" data-tip="Ausrichten" data-dev-only hidden>
+            <i data-lucide="move-3d" aria-hidden="true"></i>
+          </button>
+          <button class="mini-button" id="inventory-close" type="button" aria-label="Inventar schliessen">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="inventory-grid" role="group" aria-label="Gegenstaende">
+        <button class="inventory-slot is-selected" id="sword-inventory-slot" type="button" data-inventory-item="sword" aria-pressed="true">
+          <span class="inventory-slot-head"><i data-lucide="sword" aria-hidden="true"></i><span id="sword-slot-state">Ausgeruestet</span></span>
+          <strong id="sword-slot-name">Schwert von Ahnhoehe</strong>
+        </button>
+        <button class="inventory-slot" id="spear-inventory-slot" type="button" data-inventory-item="spear" aria-pressed="false" hidden>
+          <span class="inventory-slot-head"><i data-lucide="arrow-up-right" aria-hidden="true"></i><span>Ausgeruestet</span></span>
+          <strong>Breschenspeer</strong>
+        </button>
+        <button class="inventory-slot" type="button" data-inventory-item="shield" aria-pressed="false">
+          <span class="inventory-slot-head"><i data-lucide="shield" aria-hidden="true"></i><span>Ausgeruestet</span></span>
+          <strong>Rundschild</strong>
+        </button>
+        <button class="inventory-slot" id="hook-inventory-slot" type="button" data-inventory-item="hook" aria-pressed="false" disabled>
+          <span class="inventory-slot-head"><i data-lucide="anchor" aria-hidden="true"></i><span id="hook-slot-state">Nicht gefunden</span></span>
+          <strong>Enterhaken</strong>
+        </button>
+        <button class="inventory-slot" id="helmet-inventory-slot" type="button" data-inventory-item="helmet" aria-pressed="false" disabled>
+          <span class="inventory-slot-head"><i data-lucide="hard-hat" aria-hidden="true"></i><span id="helmet-slot-state">Nicht gefunden</span></span>
+          <strong>Wachthelm</strong>
+        </button>
+        <button class="inventory-slot" id="potion-slot" type="button" data-inventory-item="potion" aria-pressed="false">
+          <span class="inventory-slot-head"><i data-lucide="flask-conical" aria-hidden="true"></i><span id="potion-count">3</span></span>
+          <strong>Heiltrank</strong>
+        </button>
+        <button class="inventory-slot" type="button" data-inventory-item="coins" aria-pressed="false">
+          <span class="inventory-slot-head"><i data-lucide="coins" aria-hidden="true"></i><span id="inventory-coin-count">0</span></span>
+          <strong>Alte Muenzen</strong>
+        </button>
+      </div>
+      <div class="inventory-detail" aria-live="polite">
+        <strong id="inventory-item-name">Schwert von Ahnhoehe</strong>
+        <span id="inventory-item-detail">Hauptwaffe</span>
+      </div>
+    </section>
+
+    <section class="equipment-panel" id="equipment-panel" role="dialog" aria-modal="false" aria-labelledby="equipment-title" hidden>
+      <div class="equipment-header">
+        <div>
+          <h2 id="equipment-title">Ausrüstbank</h2>
+          <span class="field-label">Animierte Arm- und Ruecken-Sockets</span>
+        </div>
+        <div class="equipment-header-actions">
+          <button class="mini-button" id="equipment-close" type="button" aria-label="Ausrüstbank schliessen">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="equipment-tabs" role="tablist" aria-label="Ausrüstungsteil">
+        <button class="equipment-tab" type="button" data-equipment-part="sword" aria-pressed="true">
+          <i data-lucide="sword" aria-hidden="true"></i><span>Schwert</span>
+        </button>
+        <button class="equipment-tab" type="button" data-equipment-part="spear" aria-pressed="false">
+          <i data-lucide="arrow-up-right" aria-hidden="true"></i><span>Speer</span>
+        </button>
+        <button class="equipment-tab" type="button" data-equipment-part="shield" aria-pressed="false">
+          <i data-lucide="shield" aria-hidden="true"></i><span>Schild</span>
+        </button>
+      </div>
+
+      <div class="equipment-views" role="group" aria-label="Ansicht">
+        <button class="equipment-view" type="button" data-equipment-view="front" aria-pressed="true">Vorne</button>
+        <button class="equipment-view" type="button" data-equipment-view="left" aria-pressed="false">Links</button>
+        <button class="equipment-view" type="button" data-equipment-view="back" aria-pressed="false">Hinten</button>
+        <button class="equipment-view" type="button" data-equipment-view="right" aria-pressed="false">Rechts</button>
+      </div>
+
+      <div class="equipment-animation">
+        <div class="equipment-group-label">Animationsvorschau</div>
+        <div class="equipment-animation-row">
+          <select class="asset-select" id="equipment-animation" aria-label="Animationsvorschau">
+            <option value="idle">Leerlauf · Ruhig</option>
+            <option value="idle-breathe">Leerlauf · Atmen</option>
+            <option value="idle-look">Leerlauf · Umschauen</option>
+            <option value="walk">Gehen</option>
+            <option value="holding-left">Blocken</option>
+            <option value="hook">Enterhakenflug - Ausruestung am Ruecken</option>
+            <option value="emote-no">Trefferreaktion</option>
+            <option value="attack-melee-right">Angriff 1</option>
+            <option value="attack-melee-left">Angriff 2</option>
+            <option value="interact-right">Angriff 3</option>
+            <option value="attack4">Horizontal 4 · Links nach rechts</option>
+            <option value="attack5">Horizontal 5 · Rechts nach links</option>
+            <option value="attack6">Aufladen · Rundumschlag</option>
+          </select>
+          <button class="mini-button" id="equipment-preview-toggle" type="button" aria-label="Animationsvorschau pausieren" aria-pressed="true" data-tip="Vorschau abspielen oder pausieren">
+            <i data-lucide="play" data-preview-icon="play" aria-hidden="true" hidden></i>
+            <i data-lucide="pause" data-preview-icon="pause" aria-hidden="true"></i>
+          </button>
+        </div>
+        <label class="equipment-toggle" id="equipment-attack-state" for="equipment-attack-enabled" hidden>
+          <span id="equipment-attack-state-label">Kombostufe aktiv</span>
+          <input id="equipment-attack-enabled" type="checkbox" checked>
+        </label>
+        <div class="combo-flow-section" id="combo-flow-section" hidden>
+          <div class="equipment-group-label">Kombo-Ablauf</div>
+          <label class="equipment-color" for="combo-mode">
+            <span>Reihenfolge</span>
+            <select class="asset-select" id="combo-mode">
+              <option value="fixed">Fest</option>
+              <option value="random">Zufällig</option>
+            </select>
+          </label>
+          <div class="equipment-control">
+            <label for="combo-pause">Pause danach</label>
+            <input id="combo-pause" type="range" min="0" max="0.45" step="0.01" value="0.08">
+            <output id="combo-pause-output" for="combo-pause">0.08 s</output>
+          </div>
+          <div class="combo-flow-row">
+            <output class="combo-order-output" id="combo-order-output">1 → 2 → 3 → H4 → H5</output>
+            <button class="mini-button" id="combo-move-earlier" type="button" aria-label="Angriff früher ausführen" data-tip="In der Reihenfolge nach vorne">
+              <i data-lucide="chevron-left" aria-hidden="true"></i>
+            </button>
+            <button class="mini-button" id="combo-move-later" type="button" aria-label="Angriff später ausführen" data-tip="In der Reihenfolge nach hinten">
+              <i data-lucide="chevron-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="horizontal-sweep-section" id="horizontal-sweep-section" hidden>
+          <div class="equipment-group-label">Arm-Schwenk</div>
+          <div class="equipment-control">
+            <label for="sweep-arm-start">Start</label>
+            <input id="sweep-arm-start" type="range" min="-150" max="150" step="1" value="18">
+            <output id="sweep-arm-start-output" for="sweep-arm-start">18°</output>
+          </div>
+          <div class="equipment-control">
+            <label for="sweep-arm-end">Ende</label>
+            <input id="sweep-arm-end" type="range" min="-150" max="150" step="1" value="-66">
+            <output id="sweep-arm-end-output" for="sweep-arm-end">-66°</output>
+          </div>
+        </div>
+        <div class="attack-speed-section" id="attack-speed-section" hidden>
+          <div class="equipment-group-label">Animationstempo</div>
+          <div class="equipment-control">
+            <label for="attack-speed">Tempo</label>
+            <input id="attack-speed" type="range" min="0.55" max="1.60" step="0.05" value="1">
+            <output id="attack-speed-output" for="attack-speed">1.00×</output>
+          </div>
+        </div>
+        <div class="attack-feel-section" id="attack-feel-section" hidden>
+          <div class="equipment-group-label">Kampfgefuehl</div>
+          <div class="equipment-control">
+            <label for="attack-feel-range">Reichw.</label>
+            <input id="attack-feel-range" type="range" min="0.70" max="1.45" step="0.01" value="1" data-attack-feel-value="rangeScale">
+            <output id="attack-feel-range-output" for="attack-feel-range">100%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="attack-feel-hit-start">Treffer ab</label>
+            <input id="attack-feel-hit-start" type="range" min="0.05" max="0.85" step="0.01" value="0.25" data-attack-feel-value="hitStart">
+            <output id="attack-feel-hit-start-output" for="attack-feel-hit-start">25%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="attack-feel-hit-end">Treffer bis</label>
+            <input id="attack-feel-hit-end" type="range" min="0.12" max="0.95" step="0.01" value="0.68" data-attack-feel-value="hitEnd">
+            <output id="attack-feel-hit-end-output" for="attack-feel-hit-end">68%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="attack-feel-lunge">Vorst.</label>
+            <input id="attack-feel-lunge" type="range" min="0" max="1.60" step="0.01" value="1" data-attack-feel-value="lungeScale">
+            <output id="attack-feel-lunge-output" for="attack-feel-lunge">100%</output>
+          </div>
+          <div class="equipment-control">
+            <label for="attack-feel-impact">Wucht</label>
+            <input id="attack-feel-impact" type="range" min="0.60" max="1.80" step="0.01" value="1" data-attack-feel-value="impactScale">
+            <output id="attack-feel-impact-output" for="attack-feel-impact">100%</output>
+          </div>
+        </div>
+        <div class="equipment-control">
+          <label for="equipment-frame">Frame</label>
+          <input id="equipment-frame" type="range" min="0" max="1" step="0.001" value="0">
+          <output id="equipment-frame-output" for="equipment-frame">0%</output>
+        </div>
+      </div>
+
+      <div class="equipment-controls">
+        <div class="equipment-group-label">Position</div>
+        <div class="equipment-control"><label for="equip-px">X</label><input id="equip-px" type="range" min="-0.4" max="0.4" step="0.005" data-equipment-value="px"><output for="equip-px">0.00</output></div>
+        <div class="equipment-control"><label for="equip-py">Y</label><input id="equip-py" type="range" min="-0.45" max="0.15" step="0.005" data-equipment-value="py"><output for="equip-py">0.00</output></div>
+        <div class="equipment-control"><label for="equip-pz">Z</label><input id="equip-pz" type="range" min="-0.4" max="0.4" step="0.005" data-equipment-value="pz"><output for="equip-pz">0.00</output></div>
+
+        <div class="equipment-group-label">Drehung</div>
+        <div class="equipment-control"><label for="equip-rx">X</label><input id="equip-rx" type="range" min="-180" max="180" step="1" data-equipment-value="rx"><output for="equip-rx">0°</output></div>
+        <div class="equipment-control"><label for="equip-ry">Y</label><input id="equip-ry" type="range" min="-180" max="180" step="1" data-equipment-value="ry"><output for="equip-ry">0°</output></div>
+        <div class="equipment-control"><label for="equip-rz">Z</label><input id="equip-rz" type="range" min="-180" max="180" step="1" data-equipment-value="rz"><output for="equip-rz">0°</output></div>
+
+        <div class="equipment-group-label">Größe</div>
+        <div class="equipment-control"><label for="equip-scale">S</label><input id="equip-scale" type="range" min="0.55" max="1.45" step="0.01" data-equipment-value="scale"><output for="equip-scale">1.00</output></div>
+      </div>
+
+      <div class="attack-fx-section" id="attack-fx-section">
+        <div class="equipment-group-label">Schwungeffekt</div>
+        <label class="equipment-toggle" for="attack-fx-enabled">
+          <span>3D-Partikel</span>
+          <input id="attack-fx-enabled" type="checkbox" checked>
+        </label>
+        <div class="attack-fx-controls">
+          <label class="equipment-color" for="attack-fx-color"><span>Farbe</span><input id="attack-fx-color" type="color" value="#ffbf32"></label>
+          <div class="equipment-group-label">Position</div>
+          <div class="equipment-control"><label for="attack-fx-x">X</label><input id="attack-fx-x" type="range" min="-1.5" max="1.5" step="0.01" data-attack-fx-value="x"><output for="attack-fx-x">0.00</output></div>
+          <div class="equipment-control"><label for="attack-fx-y">Y</label><input id="attack-fx-y" type="range" min="-1" max="1.5" step="0.01" data-attack-fx-value="y"><output for="attack-fx-y">0.00</output></div>
+          <div class="equipment-control"><label for="attack-fx-z">Z</label><input id="attack-fx-z" type="range" min="-1" max="2" step="0.01" data-attack-fx-value="z"><output for="attack-fx-z">0.00</output></div>
+          <div class="equipment-group-label">Darstellung</div>
+          <div class="equipment-control"><label for="attack-fx-rotation">Rot</label><input id="attack-fx-rotation" type="range" min="-180" max="180" step="1" data-attack-fx-value="rotation"><output for="attack-fx-rotation">0 deg</output></div>
+          <div class="equipment-control"><label for="attack-fx-scale">Gr.</label><input id="attack-fx-scale" type="range" min="0.3" max="3" step="0.01" data-attack-fx-value="scale"><output for="attack-fx-scale">1.00</output></div>
+          <div class="equipment-control"><label for="attack-fx-opacity">Deck.</label><input id="attack-fx-opacity" type="range" min="0.1" max="1" step="0.01" data-attack-fx-value="opacity"><output for="attack-fx-opacity">0.60</output></div>
+          <div class="equipment-control"><label for="attack-fx-duration">Zeit</label><input id="attack-fx-duration" type="range" min="0.12" max="0.5" step="0.01" data-attack-fx-value="duration"><output for="attack-fx-duration">0.24</output></div>
+          <div class="equipment-group-label">Verhalten</div>
+          <div class="equipment-control"><label for="attack-fx-gravity">Grav.</label><input id="attack-fx-gravity" type="range" min="-20" max="20" step="0.1" data-attack-fx-value="gravity"><output for="attack-fx-gravity">-1.0</output></div>
+          <div class="equipment-control"><label for="attack-fx-drift">Drift</label><input id="attack-fx-drift" type="range" min="0" max="6" step="0.05" data-attack-fx-value="drift"><output for="attack-fx-drift">0.60</output></div>
+          <div class="equipment-control"><label for="attack-fx-fade-in">Ein</label><input id="attack-fx-fade-in" type="range" min="0" max="0.4" step="0.01" data-attack-fx-value="fadeIn"><output for="attack-fx-fade-in">0.02</output></div>
+          <div class="equipment-control"><label for="attack-fx-fade-out">Aus</label><input id="attack-fx-fade-out" type="range" min="0" max="0.4" step="0.01" data-attack-fx-value="fadeOut"><output for="attack-fx-fade-out">0.07</output></div>
+        </div>
+      </div>
+
+      <div class="attack-fx-section weapon-glow-section" id="weapon-glow-section" hidden>
+        <div class="equipment-group-label">Waffenleuchten</div>
+        <label class="equipment-toggle" for="weapon-glow-enabled">
+          <span id="weapon-glow-label">Ladeleuchten</span>
+          <input id="weapon-glow-enabled" type="checkbox" checked>
+        </label>
+        <div class="attack-fx-controls">
+          <label class="equipment-color" for="weapon-glow-start"><span>Startfarbe</span><input id="weapon-glow-start" type="color" value="#ffd759"></label>
+          <label class="equipment-color" for="weapon-glow-end"><span>Voll geladen</span><input id="weapon-glow-end" type="color" value="#64d9ff"></label>
+          <div class="equipment-control"><label for="weapon-glow-intensity">Staerke</label><input id="weapon-glow-intensity" type="range" min="0.25" max="4" step="0.05" value="2.10"><output for="weapon-glow-intensity">2.10</output></div>
+        </div>
+      </div>
+
+      <div class="equipment-status" id="equipment-status" role="status">Schwert-Socket ausgewählt</div>
+      <div class="equipment-actions">
+        <button class="action-button" id="equipment-reset" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Zurücksetzen</span></button>
+        <button class="action-button" id="equipment-save" type="button"><i data-lucide="save" aria-hidden="true"></i><span>Speichern</span></button>
+      </div>
+    </section>
+
+    <section class="reward-panel" id="reward-panel" role="dialog" aria-modal="true" aria-labelledby="reward-title" hidden>
+      <h2 id="reward-title">Beute der alten Wacht</h2>
+      <p>Waehle deine Antwort auf die zweite Bresche.</p>
+      <div class="reward-options">
+        <button class="reward-option" type="button" data-reward="sword">
+          <span class="reward-option-head"><i data-lucide="sword" aria-hidden="true"></i><strong>Waechterklinge</strong></span>
+          <span>Vier schnelle Hiebe, dazu ein aufladbarer Rundumschlag.</span>
+        </button>
+        <button class="reward-option" type="button" data-reward="spear">
+          <span class="reward-option-head"><i data-lucide="arrow-up-right" aria-hidden="true"></i><strong>Breschenspeer</strong></span>
+          <span>Mehr Reichweite. Starke Stoesse halten die Horde auf Abstand.</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="supply-panel" id="supply-panel" role="dialog" aria-modal="true" aria-labelledby="supply-title" hidden>
+      <div class="supply-head">
+        <div>
+          <h2 id="supply-title">Versorgung der alten Wacht</h2>
+          <p>Drei Fundstuecke, eine Entscheidung fuer diesen Lauf.</p>
+        </div>
+        <span class="supply-coins" role="status" aria-label="Verfuegbare Muenzen"><i data-lucide="coins" aria-hidden="true"></i><strong id="supply-coin-count">0</strong></span>
+      </div>
+      <div class="supply-options" id="supply-options" role="group" aria-label="Zufaellige Verstaerkungen"></div>
+      <div class="supply-actions">
+        <span class="supply-status" id="supply-status" role="status">Waehle eine Verstaerkung oder ziehe weiter.</span>
+        <button class="action-button" id="supply-reroll" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Neu wuerfeln · 2</span></button>
+        <button class="action-button" id="supply-continue" type="button"><i data-lucide="door-open" aria-hidden="true"></i><span>Weiter</span></button>
+      </div>
+    </section>
+
+    <div class="interaction-prompt" id="interaction-prompt" role="status" hidden>
+      <kbd>E</kbd><span>Truhe oeffnen</span>
+    </div>
+
+    <div class="combat-stick" id="combat-stick" role="application" aria-label="Bewegungssteuerung" hidden>
+      <span class="combat-stick-knob" id="combat-stick-knob"></span>
+    </div>
+
+    <div class="combat-message" id="combat-message" role="status" hidden></div>
+
+    <div class="level-transition" id="level-transition" role="status" hidden>
+      <div class="level-transition-copy">
+        <span>Raumwechsel</span>
+        <strong>Wachtbruch</strong>
+      </div>
+    </div>
+
+    <section class="game-over-screen" id="game-over-screen" role="dialog" aria-modal="true" aria-labelledby="game-over-title" hidden>
+      <div class="game-over-copy">
+        <span class="screen-kicker">Die Wacht schweigt</span>
+        <h2 id="game-over-title">Game Over</h2>
+        <p>Ra ist gefallen. Doch Ahnhoehe hat ihn noch nicht ganz verloren.</p>
+        <div class="screen-actions">
+          <button class="screen-action primary" id="game-over-continue" type="button" disabled>
+            <i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Weiter</span>
+          </button>
+          <button class="screen-action" id="game-over-title-button" type="button" disabled>
+            <i data-lucide="door-open" aria-hidden="true"></i><span>Zum Titel</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="loading" id="loading-screen" aria-live="polite">
+      <div class="loading-line" role="progressbar" aria-label="Szene wird geladen" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="loading-progress"></span></div>
+    </div>
+  </main>
+
+  <script type="module" src="./scene.js?v=core-pass-2026-07-27"></script>
+  <script>window.addEventListener('DOMContentLoaded', () => window.lucide?.createIcons());</script>
+</body>
+</html>

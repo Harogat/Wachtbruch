@@ -1,0 +1,22 @@
+{
+  "package": "Wachtfackeln_von_Ahnhoehe",
+  "version": 1,
+  "variants": [
+    {
+      "asset": "Wachtfackel_von_Ahnhoehe_Gelb",
+      "glb": "Wachtfackel_von_Ahnhoehe_Gelb.glb",
+      "metadata": "Wachtfackel_von_Ahnhoehe_Gelb.metadata.json",
+      "animation": "Wachtfackel_Gelb_Loop",
+      "lightAnchor": "LightAnchor_Gelb"
+    },
+    {
+      "asset": "Wachtfackel_von_Ahnhoehe_Blau",
+      "glb": "Wachtfackel_von_Ahnhoehe_Blau.glb",
+      "metadata": "Wachtfackel_von_Ahnhoehe_Blau.metadata.json",
+      "animation": "Wachtfackel_Blau_Loop",
+      "lightAnchor": "LightAnchor_Blau"
+    }
+  ],
+  "sharedPreview": "Wachtfackeln_von_Ahnhoehe_Vorschau.png",
+  "animatedPreview": "Wachtfackeln_von_Ahnhoehe_Animation.gif"
+}

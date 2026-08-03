@@ -1,0 +1,44 @@
+{
+  "asset": "Wachtfackel_von_Ahnhoehe_Blau",
+  "assetId": "wachtfackel-ahnhoehe-blau",
+  "variant": "Blau",
+  "version": 1,
+  "format": "glTF Binary 2.0",
+  "units": "meters",
+  "upAxis": "Y",
+  "forwardAxis": "+Z",
+  "pivot": "center of wall backplate",
+  "dimensionsMeters": [
+    0.3612585483016806,
+    1.2243750082701443,
+    0.2977500003017486
+  ],
+  "centerMeters": [
+    0,
+    0.20906250301748514,
+    0.14887500065378845
+  ],
+  "meshCount": 25,
+  "triangleCount": 536,
+  "byteSize": 72528,
+  "animation": {
+    "clip": "Wachtfackel_Blau_Loop",
+    "durationSeconds": 2.4,
+    "loop": true,
+    "flameLayers": 3,
+    "sparks": 5
+  },
+  "runtime": {
+    "attachTo": "wall",
+    "lightAnchor": "LightAnchor_Blau",
+    "pointLightIncluded": true,
+    "pointLightExtension": "KHR_lights_punctual",
+    "collisionRecommended": false,
+    "loopAnimationOnLoad": true
+  },
+  "authorship": {
+    "conceptAndDirection": "Mani / Harogat and ChatGPT / OpenAI",
+    "proceduralModeling": "ChatGPT / OpenAI",
+    "project": "Wachtbruch"
+  }
+}

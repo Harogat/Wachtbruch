@@ -1,0 +1,1176 @@
+{
+  "schema": "wachtbruch-godot-core",
+  "version": 4,
+  "units": {
+    "cellSize": 2.35,
+    "levelHeight": 2.115,
+    "gridSize": 16
+  },
+  "assets": {
+    "floor": {
+      "id": "floor",
+      "label": "Alter Steinboden",
+      "group": "Boden",
+      "loadModel": true,
+      "walkable": true,
+      "model": "floor",
+      "definition": null
+    },
+    "floor-detail": {
+      "id": "floor-detail",
+      "label": "Verzierter Steinboden",
+      "group": "Boden",
+      "loadModel": true,
+      "walkable": true,
+      "model": "floor-detail",
+      "definition": null
+    },
+    "dirt": {
+      "id": "dirt",
+      "label": "Erdiger Inselgrund",
+      "group": "Boden",
+      "loadModel": true,
+      "model": "dirt",
+      "definition": null
+    },
+    "stones": {
+      "id": "stones",
+      "label": "Lose Wegsteine",
+      "group": "Boden",
+      "loadModel": true,
+      "model": "stones",
+      "definition": null
+    },
+    "trap": {
+      "id": "trap",
+      "label": "Verborgene Bodenfalle",
+      "group": "Boden",
+      "loadModel": true,
+      "model": "trap",
+      "definition": null
+    },
+    "wall": {
+      "id": "wall",
+      "label": "Festungsmauer",
+      "group": "Architektur",
+      "loadModel": true,
+      "solid": true,
+      "grapple": true,
+      "model": "wall",
+      "definition": null
+    },
+    "wall-half": {
+      "id": "wall-half",
+      "label": "Niedrige Brüstung",
+      "group": "Architektur",
+      "loadModel": true,
+      "solid": true,
+      "model": "wall-half",
+      "definition": null
+    },
+    "wall-narrow": {
+      "id": "wall-narrow",
+      "label": "Schmaler Mauerrest",
+      "group": "Architektur",
+      "loadModel": true,
+      "solid": true,
+      "model": "wall-narrow",
+      "definition": null
+    },
+    "wall-opening": {
+      "id": "wall-opening",
+      "label": "Durchbrochene Mauer",
+      "group": "Architektur",
+      "loadModel": true,
+      "solid": true,
+      "grapple": true,
+      "model": "wall-opening",
+      "definition": null
+    },
+    "gate": {
+      "id": "gate",
+      "label": "Tor von Ahnhoehe",
+      "group": "Architektur",
+      "loadModel": true,
+      "solid": true,
+      "grapple": true,
+      "model": "gate",
+      "definition": null
+    },
+    "column": {
+      "id": "column",
+      "label": "Säule des Torhofs",
+      "group": "Architektur",
+      "loadModel": true,
+      "solid": true,
+      "grapple": true,
+      "model": "column",
+      "definition": null
+    },
+    "stairs": {
+      "id": "stairs",
+      "label": "Stufen zum Heiligtum",
+      "group": "Architektur",
+      "loadModel": true,
+      "model": "stairs",
+      "definition": null
+    },
+    "wood-structure": {
+      "id": "wood-structure",
+      "label": "Hölzerner Steg",
+      "group": "Holz und Lager",
+      "loadModel": true,
+      "solid": true,
+      "walkable": true,
+      "grapple": true,
+      "model": "wood-structure",
+      "definition": null
+    },
+    "wood-support": {
+      "id": "wood-support",
+      "label": "Tragbalken",
+      "group": "Holz und Lager",
+      "loadModel": true,
+      "solid": true,
+      "grapple": true,
+      "model": "wood-support",
+      "definition": null
+    },
+    "barrel": {
+      "id": "barrel",
+      "label": "Vorratsfass",
+      "group": "Holz und Lager",
+      "loadModel": true,
+      "solid": true,
+      "model": "barrel",
+      "definition": null
+    },
+    "chest": {
+      "id": "chest",
+      "label": "Truhe am Quellhof",
+      "group": "Holz und Lager",
+      "loadModel": true,
+      "solid": true,
+      "model": "chest",
+      "definition": null
+    },
+    "banner": {
+      "id": "banner",
+      "label": "Banner der alten Wacht",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "model": "banner",
+      "definition": null
+    },
+    "shield-rectangle": {
+      "id": "shield-rectangle",
+      "label": "Schild der Turmwache",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "model": "shield-rectangle",
+      "definition": null
+    },
+    "shield-round": {
+      "id": "shield-round",
+      "label": "Rundschild",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "model": "shield-round",
+      "definition": null
+    },
+    "weapon-spear": {
+      "id": "weapon-spear",
+      "label": "Speer der Torwache",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "model": "weapon-spear",
+      "definition": null
+    },
+    "weapon-sword": {
+      "id": "weapon-sword",
+      "label": "Altes Schwert",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "model": "weapon-sword",
+      "definition": null
+    },
+    "coin": {
+      "id": "coin",
+      "label": "Verlorene Münzen",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "model": "coin",
+      "definition": null
+    },
+    "rocks": {
+      "id": "rocks",
+      "label": "Felsgruppe",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "solid": true,
+      "model": "rocks",
+      "definition": null
+    },
+    "wachtanker-ahnhoehe": {
+      "id": "wachtanker-ahnhoehe",
+      "label": "Wachtanker von Ahnhoehe",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "source": "./assets/wachtbruch/Wachtanker_von_Ahnhoehe.glb",
+      "nativeScale": true,
+      "grapple": true,
+      "model": "wachtanker-ahnhoehe",
+      "definition": null
+    },
+    "enterhaken-ahnhoehe": {
+      "id": "enterhaken-ahnhoehe",
+      "label": "Enterhaken von Ahnhoehe",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "source": "./assets/wachtbruch/Enterhaken_von_Ahnhoehe.glb",
+      "nativeScale": true,
+      "model": "enterhaken-ahnhoehe",
+      "definition": null
+    },
+    "wachthelm-ahnhoehe-mani-neufassung": {
+      "id": "wachthelm-ahnhoehe-mani-neufassung",
+      "label": "Wachthelm von Ahnhoehe",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "source": "./assets/wachtbruch/Wachthelm_von_Ahnhoehe_Mani_Neufassung.glb",
+      "nativeScale": true,
+      "definition": {
+        "model": "wachthelm-ahnhoehe-mani-neufassung",
+        "animations": [
+          "Wachthelm_Rune_Pulse",
+          "Wachthelm_Rune_Pulse.001"
+        ],
+        "detail": "Zweiteiliger Wachthelm mit synchron pulsierender Stirnrune"
+      },
+      "model": "wachthelm-ahnhoehe-mani-neufassung"
+    },
+    "wachtmal-ahnhoehe": {
+      "id": "wachtmal-ahnhoehe",
+      "label": "Wachtmal von Ahnhoehe",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "source": "./assets/wachtbruch/Wachtmal_von_Ahnhoehe.glb",
+      "nativeScale": true,
+      "solid": true,
+      "model": "wachtmal-ahnhoehe",
+      "definition": null
+    },
+    "wachtfackel-ahnhoehe-gelb": {
+      "id": "wachtfackel-ahnhoehe-gelb",
+      "label": "Wachtflamme von Ahnhoehe",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "source": "./assets/wachtbruch/Wachtfackel_von_Ahnhoehe_Gelb.glb",
+      "nativeScale": true,
+      "definition": {
+        "model": "wachtfackel-ahnhoehe-gelb",
+        "animation": "Wachtfackel_Gelb_Loop",
+        "mountHeight": 0.96,
+        "detail": "Warme, animierte Wandfackel der alten Wacht",
+        "torch": {
+          "variant": "warm",
+          "color": "#ff922e",
+          "dayIntensity": 2.8,
+          "nightIntensity": 6.6,
+          "distanceCells": 2.15,
+          "flickerSpeed": 8.2,
+          "flickerAmount": 0.13,
+          "lightAnchor": "LightAnchor_Gelb"
+        }
+      },
+      "model": "wachtfackel-ahnhoehe-gelb"
+    },
+    "wachtfackel-ahnhoehe-blau": {
+      "id": "wachtfackel-ahnhoehe-blau",
+      "label": "Runenflamme von Ahnhoehe",
+      "group": "Ausstattung",
+      "loadModel": true,
+      "source": "./assets/wachtbruch/Wachtfackel_von_Ahnhoehe_Blau.glb",
+      "nativeScale": true,
+      "definition": {
+        "model": "wachtfackel-ahnhoehe-blau",
+        "animation": "Wachtfackel_Blau_Loop",
+        "mountHeight": 0.96,
+        "detail": "Kuehle, animierte Runenfackel von Ahnhoehe",
+        "torch": {
+          "variant": "rune",
+          "color": "#2fbfff",
+          "dayIntensity": 2.4,
+          "nightIntensity": 5.8,
+          "distanceCells": 2,
+          "flickerSpeed": 7.4,
+          "flickerAmount": 0.1,
+          "lightAnchor": "LightAnchor_Blau"
+        }
+      },
+      "model": "wachtfackel-ahnhoehe-blau"
+    },
+    "character-human": {
+      "id": "character-human",
+      "label": "Wache von Ahnhoehe",
+      "group": "Figuren",
+      "loadModel": true,
+      "model": "character-human",
+      "definition": null
+    },
+    "character-orc": {
+      "id": "character-orc",
+      "label": "Späher aus den Schattenlanden",
+      "group": "Figuren",
+      "loadModel": true,
+      "model": "character-orc",
+      "definition": null
+    },
+    "fall-zone": {
+      "id": "fall-zone",
+      "label": "Abgrundfeld",
+      "group": "Boden",
+      "model": "floor",
+      "definition": {
+        "model": "floor",
+        "fallZone": true
+      },
+      "loadModel": false
+    },
+    "grapple-anchor": {
+      "id": "grapple-anchor",
+      "label": "Enterhakenanker",
+      "group": "Ausstattung",
+      "model": "wachtanker-ahnhoehe",
+      "definition": {
+        "model": "wachtanker-ahnhoehe",
+        "scale": 1.08,
+        "grappleAnchor": true
+      },
+      "loadModel": false
+    },
+    "marker-player-start": {
+      "id": "marker-player-start",
+      "label": "Spielerstart",
+      "group": "Systemmarker",
+      "definition": {
+        "marker": {
+          "type": "player-start",
+          "color": "#ffe36e",
+          "unique": true,
+          "settings": {}
+        }
+      },
+      "model": "marker-player-start",
+      "loadModel": false
+    },
+    "marker-combat-trigger": {
+      "id": "marker-combat-trigger",
+      "label": "Kampftrigger",
+      "group": "Systemmarker",
+      "definition": {
+        "marker": {
+          "type": "combat-trigger",
+          "color": "#ff657a",
+          "unique": true,
+          "settings": {
+            "radius": 2.2325
+          }
+        }
+      },
+      "model": "marker-combat-trigger",
+      "loadModel": false
+    },
+    "marker-exit": {
+      "id": "marker-exit",
+      "label": "Raumausgang",
+      "group": "Systemmarker",
+      "definition": {
+        "marker": {
+          "type": "exit",
+          "color": "#54d8ff",
+          "unique": false,
+          "settings": {
+            "targetRoomId": "",
+            "condition": "clear",
+            "radius": 1.645
+          }
+        }
+      },
+      "model": "marker-exit",
+      "loadModel": false
+    },
+    "marker-arrival": {
+      "id": "marker-arrival",
+      "label": "Ankunftspunkt",
+      "group": "Systemmarker",
+      "definition": {
+        "marker": {
+          "type": "arrival",
+          "color": "#6dff8c",
+          "unique": true,
+          "settings": {}
+        }
+      },
+      "model": "marker-arrival",
+      "loadModel": false
+    },
+    "enemy-sword": {
+      "id": "enemy-sword",
+      "label": "Ork-Späher mit Schwert",
+      "group": "Gegner",
+      "model": "character-orc",
+      "definition": {
+        "model": "character-orc",
+        "animation": "idle",
+        "scale": 1,
+        "enemy": {
+          "catalogId": "orc-scout-sword",
+          "name": "Ork-Späher",
+          "health": 2,
+          "coinReward": 3,
+          "weapon": "weapon-sword",
+          "attackType": "melee"
+        }
+      },
+      "loadModel": false
+    },
+    "enemy-spear": {
+      "id": "enemy-spear",
+      "label": "Ork-Speerwerfer",
+      "group": "Gegner",
+      "model": "character-orc",
+      "definition": {
+        "model": "character-orc",
+        "animation": "idle",
+        "scale": 1,
+        "enemy": {
+          "catalogId": "orc-spear-thrower",
+          "name": "Ork-Speerwerfer",
+          "health": 2,
+          "coinReward": 4,
+          "weapon": "weapon-spear",
+          "attackType": "ranged"
+        }
+      },
+      "loadModel": false
+    },
+    "enemy-boss": {
+      "id": "enemy-boss",
+      "label": "Bruchhauptmann der Schattenlande",
+      "group": "Gegner",
+      "model": "character-orc",
+      "definition": {
+        "model": "character-orc",
+        "animation": "idle",
+        "scale": 2,
+        "enemy": {
+          "catalogId": "bruchhauptmann",
+          "name": "Bruchhauptmann",
+          "health": 18,
+          "coinReward": 16,
+          "weapon": "weapon-spear",
+          "attackType": "boss",
+          "boss": true,
+          "bodyRadius": 0.6764999999999999
+        }
+      },
+      "loadModel": false
+    }
+  },
+  "attacks": {
+    "sword": [
+      {
+        "id": "sword-sweep",
+        "profile": "attack1",
+        "damage": 1,
+        "knockback": 7.2,
+        "duration": 0.4,
+        "animation": "attack-melee-right",
+        "animationSpeed": 1.38,
+        "hitStart": 0.29,
+        "hitEnd": 0.6,
+        "rangeCells": 0.86,
+        "cone": 0,
+        "lungeCells": 0.075,
+        "lungeStart": 0.14,
+        "lungeEnd": 0.52,
+        "chainAt": 0.78,
+        "range": 2.021,
+        "lunge": 0.17625
+      },
+      {
+        "id": "sword-return",
+        "profile": "attack2",
+        "damage": 1,
+        "knockback": 7.2,
+        "duration": 0.44,
+        "animation": "attack-melee-left",
+        "animationSpeed": 1.28,
+        "hitStart": 0.31,
+        "hitEnd": 0.64,
+        "rangeCells": 0.94,
+        "cone": -0.06,
+        "lungeCells": 0.06,
+        "lungeStart": 0.18,
+        "lungeEnd": 0.56,
+        "chainAt": 0.79,
+        "range": 2.209,
+        "lunge": 0.141
+      },
+      {
+        "id": "sword-thrust",
+        "profile": "attack3",
+        "damage": 1,
+        "destructibleDamage": 2,
+        "knockback": 7.2,
+        "finisher": true,
+        "empoweredDamageBonus": 1,
+        "duration": 0.52,
+        "animation": "interact-right",
+        "animationSpeed": 1.22,
+        "hitStart": 0.39,
+        "hitEnd": 0.7,
+        "rangeCells": 1.08,
+        "cone": 0.76,
+        "lungeCells": 0.32,
+        "lungeStart": 0.25,
+        "lungeEnd": 0.68,
+        "chainAt": 0.83,
+        "range": 2.5380000000000003,
+        "lunge": 0.752
+      },
+      {
+        "id": "sword-horizontal-four",
+        "profile": "attack4",
+        "damage": 1,
+        "knockback": 7.2,
+        "horizontalSweep": true,
+        "sweepDirection": -1,
+        "armStartDeg": 18,
+        "armEndDeg": -66,
+        "duration": 0.56,
+        "animation": "holding-right",
+        "animationSpeed": 1,
+        "hitStart": 0.25,
+        "hitEnd": 0.68,
+        "rangeCells": 1.18,
+        "cone": 0,
+        "lungeCells": 0.06,
+        "lungeStart": 0.2,
+        "lungeEnd": 0.66,
+        "chainAt": 0.76,
+        "range": 2.773,
+        "lunge": 0.141
+      },
+      {
+        "id": "sword-horizontal-five",
+        "profile": "attack5",
+        "damage": 2,
+        "destructibleDamage": 2,
+        "knockback": 12.4,
+        "finisher": true,
+        "horizontalSweep": true,
+        "reverseSweep": true,
+        "sweepDirection": -1,
+        "armStartDeg": -66,
+        "armEndDeg": 18,
+        "duration": 0.58,
+        "animation": "holding-right",
+        "animationSpeed": 1,
+        "hitStart": 0.23,
+        "hitEnd": 0.67,
+        "rangeCells": 1.2,
+        "cone": 0,
+        "lungeCells": 0.07,
+        "lungeStart": 0.18,
+        "lungeEnd": 0.66,
+        "chainAt": 0.76,
+        "range": 2.82,
+        "lunge": 0.16450000000000004
+      },
+      {
+        "id": "sword-whirl",
+        "profile": "attack6",
+        "damage": 1,
+        "knockback": 7.2,
+        "holdOnly": true,
+        "duration": 1.16,
+        "animation": "attack-melee-right",
+        "chargeAnimation": "holding-both",
+        "chargeEnd": 0.56,
+        "animationSpeed": 1.34,
+        "hitStart": 0.67,
+        "hitEnd": 0.9,
+        "rangeCells": 1.28,
+        "cone": -1,
+        "range": 3.008,
+        "lunge": 0
+      }
+    ],
+    "spear": [
+      {
+        "id": "spear-sweep",
+        "profile": "attack1",
+        "damage": 1,
+        "knockback": 9.4,
+        "duration": 0.47,
+        "animation": "attack-melee-right",
+        "animationSpeed": 1.2,
+        "hitStart": 0.29,
+        "hitEnd": 0.6,
+        "rangeCells": 1.06,
+        "cone": 0.16,
+        "lungeCells": 0.08,
+        "lungeStart": 0.15,
+        "lungeEnd": 0.53,
+        "chainAt": 0.79,
+        "range": 2.491,
+        "lunge": 0.188
+      },
+      {
+        "id": "spear-return",
+        "profile": "attack2",
+        "damage": 1,
+        "knockback": 9.4,
+        "duration": 0.52,
+        "animation": "attack-melee-left",
+        "animationSpeed": 1.12,
+        "hitStart": 0.32,
+        "hitEnd": 0.65,
+        "rangeCells": 1.16,
+        "cone": 0.18,
+        "lungeCells": 0.08,
+        "lungeStart": 0.18,
+        "lungeEnd": 0.57,
+        "chainAt": 0.8,
+        "range": 2.726,
+        "lunge": 0.188
+      },
+      {
+        "id": "spear-thrust",
+        "profile": "attack3",
+        "damage": 1,
+        "destructibleDamage": 2,
+        "knockback": 9.4,
+        "finisher": true,
+        "duration": 0.59,
+        "animation": "interact-right",
+        "animationSpeed": 1.13,
+        "hitStart": 0.39,
+        "hitEnd": 0.7,
+        "rangeCells": 1.38,
+        "cone": 0.84,
+        "lungeCells": 0.44,
+        "lungeStart": 0.25,
+        "lungeEnd": 0.7,
+        "chainAt": 0.84,
+        "range": 3.243,
+        "lunge": 1.034
+      },
+      {
+        "id": "spear-horizontal-four",
+        "profile": "attack4",
+        "damage": 1,
+        "knockback": 9.4,
+        "horizontalSweep": true,
+        "sweepDirection": -1,
+        "armStartDeg": 18,
+        "armEndDeg": -70,
+        "duration": 0.6,
+        "animation": "holding-right",
+        "animationSpeed": 1,
+        "hitStart": 0.25,
+        "hitEnd": 0.68,
+        "rangeCells": 1.28,
+        "cone": 0,
+        "lungeCells": 0.08,
+        "lungeStart": 0.2,
+        "lungeEnd": 0.67,
+        "chainAt": 0.77,
+        "range": 3.008,
+        "lunge": 0.188
+      },
+      {
+        "id": "spear-horizontal-five",
+        "profile": "attack5",
+        "damage": 2,
+        "destructibleDamage": 2,
+        "knockback": 12.4,
+        "finisher": true,
+        "horizontalSweep": true,
+        "reverseSweep": true,
+        "sweepDirection": -1,
+        "armStartDeg": -70,
+        "armEndDeg": 18,
+        "duration": 0.62,
+        "animation": "holding-right",
+        "animationSpeed": 1,
+        "hitStart": 0.24,
+        "hitEnd": 0.68,
+        "rangeCells": 1.32,
+        "cone": 0,
+        "lungeCells": 0.09,
+        "lungeStart": 0.19,
+        "lungeEnd": 0.67,
+        "chainAt": 0.77,
+        "range": 3.1020000000000003,
+        "lunge": 0.2115
+      },
+      {
+        "id": "spear-whirl",
+        "profile": "attack6",
+        "damage": 1,
+        "knockback": 9.4,
+        "holdOnly": true,
+        "duration": 1.24,
+        "animation": "attack-melee-right",
+        "chargeAnimation": "holding-both",
+        "chargeEnd": 0.58,
+        "animationSpeed": 1.2,
+        "hitStart": 0.69,
+        "hitEnd": 0.91,
+        "rangeCells": 1.46,
+        "cone": -1,
+        "range": 3.431,
+        "lunge": 0
+      }
+    ]
+  },
+  "weaponRebound": {
+    "schema": "wachtbruch-weapon-rebound",
+    "version": 1,
+    "profile": {
+      "enabled": true,
+      "probeStart": 0.3182,
+      "probeRadius": 0.12925,
+      "probeStep": 0.11750000000000001,
+      "raySpreadDegrees": 7,
+      "recoilSeconds": 0.16,
+      "recoilDistance": 0.15980000000000003,
+      "recoverySeconds": 0.22,
+      "sparkCount": 9,
+      "impactScale": 0.78
+    },
+    "sweepDegrees": {
+      "block": [
+        -14,
+        14
+      ],
+      "attack1": [
+        -62,
+        58
+      ],
+      "attack2": [
+        58,
+        -62
+      ],
+      "attack3": [
+        0,
+        0
+      ],
+      "attack4": [
+        -78,
+        78
+      ],
+      "attack5": [
+        78,
+        -78
+      ],
+      "attack6": [
+        0,
+        0
+      ]
+    }
+  },
+  "enemies": {
+    "orc-scout-sword": {
+      "id": "orc-scout-sword",
+      "editorAssetId": "enemy-sword",
+      "editorLabel": "Ork-Späher mit Schwert",
+      "model": "character-orc",
+      "animation": "idle",
+      "scale": 1,
+      "combat": {
+        "name": "Ork-Späher",
+        "health": 2,
+        "coinReward": 3,
+        "weapon": "weapon-sword",
+        "attackType": "melee"
+      }
+    },
+    "orc-spear-thrower": {
+      "id": "orc-spear-thrower",
+      "editorAssetId": "enemy-spear",
+      "editorLabel": "Ork-Speerwerfer",
+      "model": "character-orc",
+      "animation": "idle",
+      "scale": 1,
+      "combat": {
+        "name": "Ork-Speerwerfer",
+        "health": 2,
+        "coinReward": 4,
+        "weapon": "weapon-spear",
+        "attackType": "ranged"
+      }
+    },
+    "bruchhauptmann": {
+      "id": "bruchhauptmann",
+      "editorAssetId": "enemy-boss",
+      "editorLabel": "Bruchhauptmann der Schattenlande",
+      "model": "character-orc",
+      "animation": "idle",
+      "scale": 2,
+      "combat": {
+        "name": "Bruchhauptmann",
+        "health": 18,
+        "coinReward": 16,
+        "weapon": "weapon-spear",
+        "attackType": "boss",
+        "boss": true,
+        "bodyRadius": 0.6764999999999999
+      }
+    }
+  },
+  "rooms": {
+    "schema": "wachtbruch-room-library",
+    "version": 3,
+    "grid": 16,
+    "rooms": [
+      {
+        "id": "wachhof",
+        "name": "Wachhof",
+        "waves": [
+          {
+            "id": "wachhof-welle-1",
+            "name": "Erste Bresche",
+            "intermission": 2.1,
+            "rewardCoins": 1,
+            "boss": false
+          },
+          {
+            "id": "wachhof-welle-2",
+            "name": "Nachhut",
+            "intermission": 2,
+            "rewardCoins": 2,
+            "boss": false
+          }
+        ],
+        "placements": []
+      },
+      {
+        "id": "tiefe-wacht",
+        "name": "Tiefe Wacht",
+        "waves": [
+          {
+            "id": "tiefe-wacht-welle-1",
+            "name": "Vorhut",
+            "intermission": 1.5,
+            "rewardCoins": 1,
+            "boss": false
+          },
+          {
+            "id": "tiefe-wacht-welle-2",
+            "name": "Speerwall",
+            "intermission": 1.8,
+            "rewardCoins": 2,
+            "boss": false
+          }
+        ],
+        "placements": []
+      },
+      {
+        "id": "bruchkammer",
+        "name": "Bruchkammer",
+        "waves": [
+          {
+            "id": "bruchkammer-boss",
+            "name": "Bruchhauptmann",
+            "intermission": 1.8,
+            "rewardCoins": 4,
+            "boss": true
+          }
+        ],
+        "placements": []
+      },
+      {
+        "id": "wachtschlucht",
+        "name": "Wachtschlucht",
+        "waves": [
+          {
+            "id": "wachtschlucht-welle-1",
+            "name": "Waechter am Abgrund",
+            "intermission": 1.6,
+            "rewardCoins": 3,
+            "boss": false
+          }
+        ],
+        "placements": []
+      }
+    ]
+  },
+  "progression": {
+    "schema": "wachtbruch-run-upgrades",
+    "version": 1,
+    "rerollCost": 2,
+    "upgrades": [
+      {
+        "id": "guardian-heart",
+        "displayName": "Waechterherz",
+        "icon": "heart",
+        "description": "+1 maximales Leben und sofortige Heilung.",
+        "price": 8,
+        "maxStacks": 2,
+        "effects": {
+          "add": {
+            "maxHealthBonus": 1
+          },
+          "multiply": {},
+          "restoreHealth": 2
+        }
+      },
+      {
+        "id": "sharp-blade",
+        "displayName": "Scharfe Klinge",
+        "icon": "sword",
+        "description": "+1 Schaden auf alle Waffenangriffe.",
+        "price": 8,
+        "maxStacks": 2,
+        "effects": {
+          "add": {
+            "baseDamageBonus": 1
+          },
+          "multiply": {},
+          "restoreHealth": 0
+        }
+      },
+      {
+        "id": "quick-grip",
+        "displayName": "Rascher Griff",
+        "icon": "zap",
+        "description": "Waffenangriffe werden 10 Prozent schneller.",
+        "price": 6,
+        "maxStacks": 3,
+        "effects": {
+          "add": {},
+          "multiply": {
+            "attackSpeedMultiplier": 1.1
+          },
+          "restoreHealth": 0
+        }
+      },
+      {
+        "id": "heavy-finisher",
+        "displayName": "Wuchtzeichen",
+        "icon": "badge-alert",
+        "description": "Finisher verursachen +1 Schaden und Treffer stossen staerker zurueck.",
+        "price": 7,
+        "maxStacks": 3,
+        "effects": {
+          "add": {
+            "finisherDamageBonus": 1
+          },
+          "multiply": {
+            "knockbackMultiplier": 1.12,
+            "impactMultiplier": 1.08
+          },
+          "restoreHealth": 0
+        }
+      },
+      {
+        "id": "stamina-knot",
+        "displayName": "Schildknoten",
+        "icon": "shield",
+        "description": "Ausdauer regeneriert sich 25 Prozent schneller.",
+        "price": 5,
+        "maxStacks": 3,
+        "effects": {
+          "add": {},
+          "multiply": {
+            "staminaRegenMultiplier": 1.25
+          },
+          "restoreHealth": 0
+        }
+      },
+      {
+        "id": "coin-call",
+        "displayName": "Muenzenruf",
+        "icon": "coins",
+        "description": "Der Sammelradius der Muenzen waechst um 35 Prozent.",
+        "price": 4,
+        "maxStacks": 3,
+        "effects": {
+          "add": {},
+          "multiply": {
+            "magnetRadiusMultiplier": 1.35
+          },
+          "restoreHealth": 0
+        }
+      },
+      {
+        "id": "light-step",
+        "displayName": "Leichter Schritt",
+        "icon": "move-diagonal-2",
+        "description": "Ausweichen kostet 18 Prozent weniger Ausdauer.",
+        "price": 6,
+        "maxStacks": 2,
+        "effects": {
+          "add": {},
+          "multiply": {
+            "dodgeCostMultiplier": 0.82
+          },
+          "restoreHealth": 0
+        }
+      },
+      {
+        "id": "hook-core",
+        "displayName": "Hakenkern",
+        "icon": "anchor",
+        "description": "Der Enterhaken ist 22 Prozent schneller wieder bereit.",
+        "price": 5,
+        "maxStacks": 2,
+        "effects": {
+          "add": {},
+          "multiply": {
+            "hookCooldownMultiplier": 0.78
+          },
+          "restoreHealth": 0
+        }
+      },
+      {
+        "id": "battle-breath",
+        "displayName": "Atem der Wacht",
+        "icon": "sparkles",
+        "description": "Nach jeder bestandenen Welle heilt Ra 1 Leben.",
+        "price": 7,
+        "maxStacks": 2,
+        "effects": {
+          "add": {
+            "waveHeal": 1
+          },
+          "multiply": {},
+          "restoreHealth": 0
+        }
+      }
+    ]
+  },
+  "equipmentUnlocks": {
+    "schema": "wachtbruch-equipment-unlocks",
+    "version": 1,
+    "equipment": [
+      {
+        "id": "helmet",
+        "displayName": "Wachthelm von Ahnhoehe",
+        "assetId": "wachthelm-ahnhoehe-mani-neufassung",
+        "inventoryIcon": "hard-hat",
+        "equippable": true,
+        "autoEquip": false
+      },
+      {
+        "id": "hook",
+        "displayName": "Enterhaken von Ahnhoehe",
+        "assetId": "enterhaken-ahnhoehe",
+        "inventoryIcon": "anchor",
+        "equippable": false,
+        "autoEquip": true
+      }
+    ]
+  },
+  "chestDrops": {
+    "schema": "wachtbruch-chest-drops",
+    "version": 2,
+    "drops": [
+      {
+        "id": "choice",
+        "displayName": "Auswahlbelohnung",
+        "usesAmount": false
+      },
+      {
+        "id": "coins",
+        "displayName": "Muenzen",
+        "usesAmount": true
+      },
+      {
+        "id": "sword",
+        "displayName": "Schwert",
+        "usesAmount": false
+      },
+      {
+        "id": "spear",
+        "displayName": "Speer",
+        "usesAmount": false
+      },
+      {
+        "id": "helmet",
+        "displayName": "Wachthelm",
+        "usesAmount": false
+      },
+      {
+        "id": "hook",
+        "displayName": "Enterhaken",
+        "usesAmount": false
+      },
+      {
+        "id": "healing",
+        "displayName": "Heilung",
+        "usesAmount": false
+      }
+    ]
+  },
+  "saveSlots": {
+    "schema": "wachtbruch-game-save",
+    "version": 1,
+    "slotCount": 3,
+    "checkpointStates": [
+      "ready",
+      "exit-ready",
+      "victory"
+    ],
+    "autosaveReasons": [
+      "new-game",
+      "room-entry",
+      "room-cleared",
+      "reward-collected",
+      "supply-complete",
+      "equipment-changed",
+      "return-title",
+      "manual"
+    ],
+    "sections": {
+      "summary": [
+        "roomId",
+        "roomName",
+        "level",
+        "checkpointLabel",
+        "health",
+        "maxHealth",
+        "coins"
+      ],
+      "checkpoint": [
+        "roomId",
+        "level",
+        "state",
+        "position",
+        "rotationY"
+      ],
+      "player": [
+        "health",
+        "maxHealth",
+        "stamina",
+        "inventory",
+        "equippedWeapon",
+        "swordEmpowered"
+      ],
+      "progression": [
+        "run",
+        "equipment"
+      ],
+      "world": [
+        "completedRooms",
+        "openedRewardRooms",
+        "defeatedBossRooms",
+        "pendingCoins"
+      ]
+    }
+  }
+}

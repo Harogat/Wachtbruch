@@ -1,0 +1,100 @@
+{
+  "asset": "Wachthelm von Ahnhoehe – Mani Neufassung",
+  "assetId": "wachthelm-ahnhoehe-mani-neufassung",
+  "version": 1,
+  "source": "Manis Helm(1).glb vom 26.07.2026",
+  "format": "glTF Binary 2.0",
+  "units": "meters",
+  "upAxis": "Y",
+  "forwardAxis": "+Z",
+  "wearer": "Ra",
+  "dimensionsMeters": [
+    0.4647994690081557,
+    0.388315209680663,
+    0.5020858747884631
+  ],
+  "centerMeters": [
+    0.002530061739106859,
+    0.26415760513835473,
+    0.039957080502063036
+  ],
+  "meshCount": 24,
+  "vertexCount": 1434,
+  "indexCount": 1434,
+  "triangleCount": 478,
+  "externalTextures": false,
+  "overlay": {
+    "intentional": true,
+    "preserveExactly": true,
+    "doNotDeduplicate": true,
+    "doNotMergeAutomatically": true,
+    "roots": [
+      {
+        "name": "Wachthelm_von_Ahnhoehe",
+        "role": "edited front, cheek and rune overlay",
+        "meshCount": 8
+      },
+      {
+        "name": "Wachthelm_von_Ahnhoehe001",
+        "role": "complete base helmet and shell",
+        "meshCount": 16
+      }
+    ],
+    "note": "Both roots share the same origin and are intentionally visible at the same time."
+  },
+  "animations": [
+    {
+      "name": "Wachthelm_Rune_Pulse",
+      "durationSeconds": 2.375,
+      "tracks": 1
+    },
+    {
+      "name": "Wachthelm_Rune_Pulse.001",
+      "durationSeconds": 2.375,
+      "tracks": 1
+    }
+  ],
+  "materials": [
+    "Bronze_Dark.001",
+    "Bronze_Edge",
+    "Bronze_Edge.001",
+    "Bronze_Worn",
+    "Bronze_Worn.001",
+    "Helmet_Iron.001",
+    "Helmet_Iron_Dark",
+    "Helmet_Iron_Dark.001",
+    "Rune_Cyan.001",
+    "Rune_Gold",
+    "Rune_Gold.001",
+    "Rune_Heart.001"
+  ],
+  "integration": {
+    "attachTo": "Ra head bone",
+    "localPosition": [
+      0,
+      0,
+      0
+    ],
+    "localRotation": [
+      0,
+      0,
+      0
+    ],
+    "localScale": [
+      1,
+      1,
+      1
+    ],
+    "keepBothRootsVisible": true,
+    "singleRootFallback": "Parent both original roots unchanged below a new empty overlay root."
+  },
+  "integrity": {
+    "sha256": "9938f9f32774d38ca2cb740eb7a7b0dec9a8ed5dca7857e82c0382a3797a039a",
+    "byteSize": 56672
+  },
+  "authorship": {
+    "conceptAndEdit": "Mani / Harogat",
+    "technicalSupport": "Mani and ChatGPT / OpenAI",
+    "project": "Wachtbruch"
+  }
+}

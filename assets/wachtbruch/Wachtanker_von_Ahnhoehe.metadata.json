@@ -1,0 +1,254 @@
+{
+  "asset": "Wachtanker von Ahnhoehe",
+  "assetId": "wachtanker-ahnhoehe",
+  "version": 1,
+  "format": "glTF Binary 2.0",
+  "units": "meters",
+  "upAxis": "Y",
+  "forwardAxis": "+Z",
+  "wallPlane": "Z=0",
+  "pivot": "wall_contact_bottom_center",
+  "dimensionsMeters": [
+    0.66,
+    0.84,
+    0.34
+  ],
+  "meshCount": 24,
+  "vertices": 2400,
+  "triangles": 800,
+  "materials": [
+    "Stone_Main",
+    "Stone_Light",
+    "Stone_Dark",
+    "Stone_Crack",
+    "Bronze_Worn",
+    "Bronze_Dark",
+    "Rune_Gold",
+    "Rune_Cyan",
+    "Rune_Heart",
+    "Collision_Invisible"
+  ],
+  "animationClips": [
+    {
+      "name": "Wachtanker_Target_Pulse",
+      "durationSeconds": 1.6
+    }
+  ],
+  "importantNodes": {
+    "root": "Wachtanker_von_Ahnhoehe",
+    "collision": "COLLIDER_Wachtanker",
+    "grappleRing": "Grapple_Ring",
+    "grappleTarget": "Grapple_Target",
+    "glowRune": "Anchor_Rune_Awake",
+    "targetHalo": "Target_Halo_Targeted"
+  },
+  "states": {
+    "idle": "Hide Target_Halo_Targeted; keep Anchor_Rune_Awake faint or visible.",
+    "targeted": "Show Target_Halo_Targeted and play Wachtanker_Target_Pulse."
+  },
+  "integration": {
+    "suggestedAssetId": "wachtanker-ahnhoehe",
+    "replacesPrototypeModel": "shield-round used by grapple-anchor",
+    "grapplePointNode": "Grapple_Target"
+  },
+  "meshes": [
+    {
+      "name": "Anchor_Back_Plate",
+      "material": "Stone_Dark",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Anchor_Chipped_Face",
+      "material": "Stone_Main",
+      "visible": true,
+      "triangles": 28,
+      "runtime": {}
+    },
+    {
+      "name": "Anchor_Stone_Crown",
+      "material": "Stone_Light",
+      "visible": true,
+      "triangles": 16,
+      "runtime": {}
+    },
+    {
+      "name": "Crack_Left",
+      "material": "Stone_Crack",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Crack_Right",
+      "material": "Stone_Crack",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Crack_Lower",
+      "material": "Stone_Crack",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Brace_Crossbar",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Brace_Left",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Brace_Right",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Ring_Hinge_Top",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Ring_Hinge_Bottom",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Grapple_Ring",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 240,
+      "runtime": {
+        "grappleSurface": true,
+        "targetRadius": 0.25,
+        "recommendedHookPoint": [
+          0,
+          0.43,
+          0.34
+        ]
+      }
+    },
+    {
+      "name": "Mounting_Bolt_01",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 32,
+      "runtime": {
+        "hardware": "mounting_bolt"
+      }
+    },
+    {
+      "name": "Mounting_Bolt_02",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 32,
+      "runtime": {
+        "hardware": "mounting_bolt"
+      }
+    },
+    {
+      "name": "Mounting_Bolt_03",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 32,
+      "runtime": {
+        "hardware": "mounting_bolt"
+      }
+    },
+    {
+      "name": "Mounting_Bolt_04",
+      "material": "Bronze_Dark",
+      "visible": true,
+      "triangles": 32,
+      "runtime": {
+        "hardware": "mounting_bolt"
+      }
+    },
+    {
+      "name": "Rune_Bronze_Frame",
+      "material": "Bronze_Worn",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {}
+    },
+    {
+      "name": "Rune_Crystal",
+      "material": "Rune_Cyan",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "emissionPart": true,
+        "lightColor": "#4fd9dd"
+      }
+    },
+    {
+      "name": "Rune_Heart",
+      "material": "Rune_Heart",
+      "visible": true,
+      "triangles": 12,
+      "runtime": {
+        "emissionPart": true,
+        "lightColor": "#f1c34f"
+      }
+    },
+    {
+      "name": "Target_Halo_Segment_01",
+      "material": "Rune_Cyan",
+      "visible": true,
+      "triangles": 56,
+      "runtime": {}
+    },
+    {
+      "name": "Target_Halo_Segment_02",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 48,
+      "runtime": {}
+    },
+    {
+      "name": "Target_Halo_Segment_03",
+      "material": "Rune_Cyan",
+      "visible": true,
+      "triangles": 64,
+      "runtime": {}
+    },
+    {
+      "name": "Target_Halo_Segment_04",
+      "material": "Rune_Gold",
+      "visible": true,
+      "triangles": 48,
+      "runtime": {}
+    },
+    {
+      "name": "COLLIDER_Wachtanker",
+      "material": "Collision_Invisible",
+      "visible": false,
+      "triangles": 12,
+      "runtime": {
+        "collision": "box",
+        "dimensions": [
+          0.62,
+          0.81,
+          0.17
+        ],
+        "gameUse": "wall_fixture"
+      }
+    }
+  ]
+}

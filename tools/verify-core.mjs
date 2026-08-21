@@ -58,6 +58,7 @@ import {
 import {
   createEquipmentProgress,
   createGodotEquipmentUnlockCatalog,
+  DISCOVERABLE_EQUIPMENT,
   hydrateEquipmentProgress,
   isEquipmentEquipped,
   isEquipmentUnlocked,
@@ -160,7 +161,7 @@ const sourceFiles = [
 
 sourceFiles.forEach((file) => {
   try {
-    execFileSync(process.execPath, ['--experimental-default-type=module', '--check', file], { stdio: 'pipe' });
+    execFileSync(process.execPath, ['--check', file], { stdio: 'pipe' });
   } catch (error) {
     failures.push(`Syntaxfehler in ${relative(root, file)}: ${error.stderr?.toString().trim() || error.message}`);
   }
@@ -287,9 +288,14 @@ check(isEquipmentUnlocked(hydratedEquipment, 'helmet')
   && isEquipmentEquipped(hydratedEquipment, 'helmet'),
 'Der Ausruestungsfortschritt laesst sich nicht verlustfrei wiederherstellen.');
 const godotEquipmentCatalog = createGodotEquipmentUnlockCatalog();
-check(godotEquipmentCatalog.equipment.length === 2
-  && godotEquipmentCatalog.equipment.some((definition) => definition.id === 'hook'),
-'Der Godot-Katalog besitzt nicht beide freischaltbaren Ausruestungen.');
+// Der Katalog darf wachsen. Geprueft wird, dass jedes Fundstueck aus
+// DISCOVERABLE_EQUIPMENT auch im Godot-Export ankommt - nicht die Anzahl.
+const fehlendeAusruestung = DISCOVERABLE_EQUIPMENT
+  .map((eintrag) => eintrag.id)
+  .filter((id) => !godotEquipmentCatalog.equipment.some((definition) => definition.id === id));
+check(godotEquipmentCatalog.equipment.length === DISCOVERABLE_EQUIPMENT.length
+  && fehlendeAusruestung.length === 0,
+`Im Godot-Katalog fehlen Ausruestungen: ${fehlendeAusruestung.join(', ') || 'Anzahl weicht ab'}.`);
 
 validateChestDropCatalog().forEach((failure) => failures.push(failure));
 const invalidChestDrop = normalizeChestDrop({ dropType: 'unbekannt', dropAmount: 99 });

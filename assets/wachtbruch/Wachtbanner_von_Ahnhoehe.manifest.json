@@ -1,0 +1,20 @@
+{
+  "package": "Wachtbanner_von_Ahnhoehe",
+  "version": 1,
+  "variants": [
+    {
+      "asset": "Wachtbanner_von_Ahnhoehe_Erhalten",
+      "glb": "Wachtbanner_von_Ahnhoehe_Erhalten.glb",
+      "metadata": "Wachtbanner_von_Ahnhoehe_Erhalten.metadata.json",
+      "animation": "Wachtbanner_Erhalten_Wind_Loop"
+    },
+    {
+      "asset": "Wachtbanner_von_Ahnhoehe_Zerrissen",
+      "glb": "Wachtbanner_von_Ahnhoehe_Zerrissen.glb",
+      "metadata": "Wachtbanner_von_Ahnhoehe_Zerrissen.metadata.json",
+      "animation": "Wachtbanner_Zerrissen_Wind_Loop"
+    }
+  ],
+  "sharedPreview": "Wachtbanner_von_Ahnhoehe_Vorschau.png",
+  "animatedPreview": "Wachtbanner_von_Ahnhoehe_Animation.gif"
+}

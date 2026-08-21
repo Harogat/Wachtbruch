@@ -18,10 +18,10 @@ const BASE_ASSETS = Object.freeze([
   { id: 'wall-half', label: 'Niedrige Br\u00fcstung', group: 'Architektur', loadModel: true, solid: true },
   { id: 'wall-narrow', label: 'Schmaler Mauerrest', group: 'Architektur', loadModel: true, solid: true },
   { id: 'wall-opening', label: 'Durchbrochene Mauer', group: 'Architektur', loadModel: true, solid: true, grapple: true },
-  { id: 'gate', label: 'Tor von Ahnhoehe', group: 'Architektur', loadModel: true, solid: true, grapple: true },
+  { id: 'gate', label: 'Tor von Ahnhoehe', group: 'Architektur', loadModel: true, solid: true, grapple: true, definition: { model: 'gate', signalBeweglich: true } },
   { id: 'column', label: 'S\u00e4ule des Torhofs', group: 'Architektur', loadModel: true, solid: true, grapple: true },
   { id: 'stairs', label: 'Stufen zum Heiligtum', group: 'Architektur', loadModel: true },
-  { id: 'wood-structure', label: 'H\u00f6lzerner Steg', group: 'Holz und Lager', loadModel: true, solid: true, walkable: true, grapple: true },
+  { id: 'wood-structure', label: 'H\u00f6lzerner Steg', group: 'Holz und Lager', loadModel: true, solid: true, walkable: true, grapple: true, definition: { model: 'wood-structure', signalBeweglich: true } },
   { id: 'wood-support', label: 'Tragbalken', group: 'Holz und Lager', loadModel: true, solid: true, grapple: true },
   { id: 'barrel', label: 'Vorratsfass', group: 'Holz und Lager', loadModel: true, solid: true },
   { id: 'chest', label: 'Truhe am Quellhof', group: 'Holz und Lager', loadModel: true, solid: true },
@@ -170,7 +170,93 @@ export function createAssetCatalog({ cellSize, enemyCatalog = {} } = {}) {
     { id: 'marker-player-start', label: 'Spielerstart', group: 'Systemmarker', definition: { marker: { type: 'player-start', color: '#ffe36e', unique: true, settings: {} } } },
     { id: 'marker-combat-trigger', label: 'Kampftrigger', group: 'Systemmarker', definition: { marker: { type: 'combat-trigger', color: '#ff657a', unique: true, settings: { radius: cellSize * 0.95 } } } },
     { id: 'marker-exit', label: 'Raumausgang', group: 'Systemmarker', definition: { marker: { type: 'exit', color: '#54d8ff', unique: false, settings: { targetRoomId: '', condition: 'clear', radius: cellSize * 0.7 } } } },
-    { id: 'marker-arrival', label: 'Ankunftspunkt', group: 'Systemmarker', definition: { marker: { type: 'arrival', color: '#6dff8c', unique: true, settings: {} } } }
+    { id: 'marker-arrival', label: 'Ankunftspunkt', group: 'Systemmarker', definition: { marker: { type: 'arrival', color: '#6dff8c', unique: true, settings: {} } } },
+    { id: 'marker-druckplatte', label: 'Druckplatte (unsichtbar)', group: 'Systemmarker', definition: { marker: { type: 'druckplatte', color: '#ff922e', unique: false, settings: { signal: '', modus: 'halten', gewicht: 1, radius: cellSize * 0.62 } } } },
+    {
+      id: 'druckplatte-ahnhoehe',
+      label: 'Druckplatte von Ahnhoehe',
+      group: 'Ausstattung',
+      loadModel: true,
+      source: './assets/wachtbruch/Druckplatte_von_Ahnhoehe.glb',
+      nativeScale: true,
+      walkable: true,
+      definition: {
+        model: 'druckplatte-ahnhoehe',
+        detail: 'Steinplatte mit Bronzerahmen und Rune, sinkt unter Gewicht',
+        druckplatte: { signal: '', modus: 'halten', gewicht: 1, radius: cellSize * 0.62 }
+      }
+    },
+    {
+      id: 'wachtbruecke-ahnhoehe',
+      label: 'Wachtbruecke von Ahnhoehe',
+      group: 'Architektur',
+      loadModel: true,
+      source: './assets/wachtbruch/Wachtbruecke_von_Ahnhoehe.glb',
+      nativeScale: true,
+      walkable: true,
+      grapple: true,
+      definition: {
+        model: 'wachtbruecke-ahnhoehe',
+        animation: 'Wachtbruecke_Rune_Pulse',
+        // Das Modell ist 4.526 breit und 6.0 lang - das Verhaeltnis passt nicht
+        // auf 2:3. Darum eine Grundskalierung fuer die Breite und eine
+        // Achsenkorrektur nur fuer die Laenge. Ergibt genau 2 x 3 Zellen.
+        scale: 1.0384,
+        achsen: { x: 1, y: 1, z: 1.1315 },
+        // Gehflaeche in Modelleinheiten, aus den Snap-Punkten der Bruecke selbst:
+        // halbeLaenge = SNAP_Bridge_End.z, hoehe = SNAP_Walkable_Surface.y
+        // deckIstBoden senkt das Modell so ab, dass die Gehflaeche genau auf
+        // der Setzhoehe liegt. Der Unterbau haengt dann in den Abgrund - so
+        // wie eine Bruecke es soll. Ohne das steht das Deck 0.732 ueber dem
+        // Boden, und die maximale Stufenhoehe sind 0.705.
+        begehbar: { halbeBreite: 1.65, halbeLaenge: 3, hoehe: 0.705, deckIstBoden: true },
+        // Ein Signalschloss darf die Bruecke heben und senken.
+        signalBeweglich: true,
+        detail: 'Begehbare Steinbruecke, drei Zellen lang, Deck auf halber Hoehe'
+      }
+    },
+    {
+      id: 'armband-ahnenkraft',
+      label: 'Armband der unbaendigen Ahnenkraft',
+      group: 'Ausstattung',
+      loadModel: true,
+      source: './assets/wachtbruch/Armband_der_unbaendigen_Ahnenkraft.glb',
+      nativeScale: true,
+      definition: {
+        model: 'armband-ahnenkraft',
+        animation: 'Ahnenkraft_Rune_Pulse',
+        detail: 'Lederband mit Ahnenstein, acht glimmende Risse, Kraftrichtung im Modell'
+      }
+    },
+    {
+      id: 'wachtbanner-erhalten',
+      label: 'Wachtbanner - erhalten',
+      group: 'Ausstattung',
+      loadModel: true,
+      source: './assets/wachtbruch/Wachtbanner_von_Ahnhoehe_Erhalten.glb',
+      nativeScale: true,
+      definition: {
+        model: 'wachtbanner-erhalten',
+        animation: 'Wachtbanner_Erhalten_Wind_Loop',
+        mountHeight: 1.32,
+        detail: 'Unversehrtes Wandbanner der alten Wacht, weht im Wind'
+      }
+    },
+    {
+      id: 'wachtbanner-zerrissen',
+      label: 'Wachtbanner - zerrissen',
+      group: 'Ausstattung',
+      loadModel: true,
+      source: './assets/wachtbruch/Wachtbanner_von_Ahnhoehe_Zerrissen.glb',
+      nativeScale: true,
+      definition: {
+        model: 'wachtbanner-zerrissen',
+        animation: 'Wachtbanner_Zerrissen_Wind_Loop',
+        mountHeight: 1.32,
+        detail: 'Zerfetztes Wandbanner, gleiche Aufhaengung wie das erhaltene'
+      }
+    },
+    { id: 'marker-schloss', label: 'Signalschloss', group: 'Systemmarker', definition: { marker: { type: 'schloss', color: '#2fbfff', unique: false, settings: { signal: '', wirkung: 'oeffnen', radius: cellSize * 1.05 } } } }
   ];
 
   const enemyAssets = Object.values(enemyCatalog).map((enemy) => ({

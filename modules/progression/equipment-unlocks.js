@@ -17,6 +17,14 @@ export const DISCOVERABLE_EQUIPMENT = Object.freeze([
     inventoryIcon: 'anchor',
     equippable: false,
     autoEquip: true
+  }),
+  Object.freeze({
+    id: 'armband',
+    displayName: 'Armband der unbaendigen Ahnenkraft',
+    assetId: 'armband-ahnenkraft',
+    inventoryIcon: 'hand',
+    equippable: false,
+    autoEquip: true
   })
 ]);
 

@@ -1,0 +1,42 @@
+{
+  "asset": "Wachtbanner_von_Ahnhoehe_Zerrissen",
+  "assetId": "wachtbanner-ahnhoehe-zerrissen",
+  "variant": "Zerrissen",
+  "version": 1,
+  "format": "glTF Binary 2.0",
+  "units": "meters",
+  "upAxis": "Y",
+  "forwardAxis": "+Z",
+  "pivot": "center between wall rosettes",
+  "dimensionsMeters": [
+    1.1150000008940697,
+    1.3679999892711638,
+    0.23400000037252905
+  ],
+  "centerMeters": [
+    0,
+    -0.48899999105930325,
+    0.11699999981373549
+  ],
+  "meshCount": 28,
+  "triangleCount": 395,
+  "byteSize": 58680,
+  "animation": {
+    "clip": "Wachtbanner_Zerrissen_Wind_Loop",
+    "durationSeconds": 3.2,
+    "loop": true,
+    "articulatedSegments": 3,
+    "tornTails": 3
+  },
+  "runtime": {
+    "attachTo": "wall",
+    "collisionRecommended": false,
+    "loopAnimationOnLoad": true,
+    "externalTextures": false
+  },
+  "authorship": {
+    "conceptAndDirection": "Mani / Harogat and ChatGPT / OpenAI",
+    "proceduralModeling": "ChatGPT / OpenAI",
+    "project": "Wachtbruch"
+  }
+}

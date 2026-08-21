@@ -1992,12 +1992,12 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/"
+        "three": "./vendor/three@0.178.0/build/three.module.js",
+        "three/addons/": "./vendor/three@0.178.0/examples/jsm/"
       }
     }
   </script>
-  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="./vendor/lucide@0.468.0/lucide.min.js"></script>
 </head>
 <body>
   <main id="scene-shell">
@@ -2441,6 +2441,29 @@
           <select class="asset-select" id="marker-condition">
             <option value="clear">Nach Raumkampf</option>
             <option value="always">Sofort</option>
+            <option value="signal">Bei Signal</option>
+          </select>
+        </label>
+        <label class="marker-property" id="marker-signal-field" for="marker-signal" hidden>
+          <span class="field-label">Signalname</span>
+          <input class="marker-number" id="marker-signal" type="text" maxlength="32" placeholder="tor-hof">
+        </label>
+        <label class="marker-property" id="marker-modus-field" for="marker-modus" hidden>
+          <span class="field-label">Verhalten</span>
+          <select class="asset-select" id="marker-modus">
+            <option value="halten">Nur solange belastet</option>
+            <option value="rasten">Rastet ein</option>
+          </select>
+        </label>
+        <label class="marker-property" id="marker-gewicht-field" for="marker-gewicht" hidden>
+          <span class="field-label">Noetige Koerper</span>
+          <input class="marker-number" id="marker-gewicht" type="number" min="1" max="4" step="1" value="1">
+        </label>
+        <label class="marker-property" id="marker-wirkung-field" for="marker-wirkung" hidden>
+          <span class="field-label">Wirkung</span>
+          <select class="asset-select" id="marker-wirkung">
+            <option value="oeffnen">Oeffnet bei Signal</option>
+            <option value="schliessen">Schliesst bei Signal</option>
           </select>
         </label>
         <label class="marker-property" id="marker-radius-field" for="marker-radius" hidden>
@@ -2908,7 +2931,7 @@
     </div>
   </main>
 
-  <script type="module" src="./scene.js?v=core-pass-2026-07-27"></script>
+  <script type="module" src="./scene.js?v=fix-3"></script>
   <script>window.addEventListener('DOMContentLoaded', () => window.lucide?.createIcons());</script>
 </body>
 </html>

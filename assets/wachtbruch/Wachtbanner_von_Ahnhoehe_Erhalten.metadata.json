@@ -1,0 +1,42 @@
+{
+  "asset": "Wachtbanner_von_Ahnhoehe_Erhalten",
+  "assetId": "wachtbanner-ahnhoehe-erhalten",
+  "variant": "Erhalten",
+  "version": 1,
+  "format": "glTF Binary 2.0",
+  "units": "meters",
+  "upAxis": "Y",
+  "forwardAxis": "+Z",
+  "pivot": "center between wall rosettes",
+  "dimensionsMeters": [
+    1.1150000008940697,
+    1.355500004172325,
+    0.23400000037252905
+  ],
+  "centerMeters": [
+    0,
+    -0.48274999850988387,
+    0.11699999981373549
+  ],
+  "meshCount": 30,
+  "triangleCount": 428,
+  "byteSize": 61760,
+  "animation": {
+    "clip": "Wachtbanner_Erhalten_Wind_Loop",
+    "durationSeconds": 3.2,
+    "loop": true,
+    "articulatedSegments": 4,
+    "tornTails": 0
+  },
+  "runtime": {
+    "attachTo": "wall",
+    "collisionRecommended": false,
+    "loopAnimationOnLoad": true,
+    "externalTextures": false
+  },
+  "authorship": {
+    "conceptAndDirection": "Mani / Harogat and ChatGPT / OpenAI",
+    "proceduralModeling": "ChatGPT / OpenAI",
+    "project": "Wachtbruch"
+  }
+}

@@ -8,6 +8,7 @@ export const CHEST_DROP_DEFINITIONS = Object.freeze([
   Object.freeze({ id: 'spear', displayName: 'Speer', usesAmount: false }),
   Object.freeze({ id: 'helmet', displayName: 'Wachthelm', usesAmount: false }),
   Object.freeze({ id: 'hook', displayName: 'Enterhaken', usesAmount: false }),
+  Object.freeze({ id: 'armband', displayName: 'Ahnenarmband', usesAmount: false }),
   Object.freeze({ id: 'healing', displayName: 'Heilung', usesAmount: false })
 ]);
 

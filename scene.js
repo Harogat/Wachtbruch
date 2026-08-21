@@ -8,7 +8,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { createRoomMusicController } from './modules/audio/music-manager.js?v=music-states-3';
-import { createAssetCatalog, createAssetViews } from './modules/catalog/assets.js?v=wacht-assets-3';
+import { createAssetCatalog, createAssetViews } from './modules/catalog/assets.js?v=wacht-assets-10';
 import { createAttackSets } from './modules/catalog/attacks.js';
 import { createEnemyCatalog } from './modules/catalog/enemies.js';
 import {
@@ -56,7 +56,7 @@ import {
   serializeEquipmentProgress,
   setEquipmentEquipped,
   unlockEquipment
-} from './modules/progression/equipment-unlocks.js?v=equipment-chest-1';
+} from './modules/progression/equipment-unlocks.js?v=equipment-chest-2';
 import {
   applyRunUpgrade as applyRunUpgradeToProgress,
   availableRunUpgrades as availableRunUpgradeDefinitions,
@@ -128,6 +128,14 @@ const markerTargetField = document.getElementById('marker-target-field');
 const markerTargetRoom = document.getElementById('marker-target-room');
 const markerConditionField = document.getElementById('marker-condition-field');
 const markerCondition = document.getElementById('marker-condition');
+const markerSignalField = document.getElementById('marker-signal-field');
+const markerSignal = document.getElementById('marker-signal');
+const markerModusField = document.getElementById('marker-modus-field');
+const markerModus = document.getElementById('marker-modus');
+const markerGewichtField = document.getElementById('marker-gewicht-field');
+const markerGewicht = document.getElementById('marker-gewicht');
+const markerWirkungField = document.getElementById('marker-wirkung-field');
+const markerWirkung = document.getElementById('marker-wirkung');
 const markerRadiusField = document.getElementById('marker-radius-field');
 const markerRadius = document.getElementById('marker-radius');
 const rewardChestField = document.getElementById('reward-chest-field');
@@ -1080,12 +1088,12 @@ const chargedAttackSettings = loadChargedAttackSettings();
 const ATTACK_SETS = createAttackSets(CELL);
 const PLAYER_ATTACKS = ATTACK_SETS.sword;
 const SPEAR_ATTACKS = ATTACK_SETS.spear;
-const HORIZONTAL_SWEEP_PROFILE_KEYS = Object.freeze(['attack4', 'attack5']);
+const HORIZONTAL_SWEEP_PROFILE_KEYS = Object.freeze(['attack4', 'attack5', 'attack6']);
 const HORIZONTAL_SWEEP_DEFAULTS = Object.freeze(Object.fromEntries(
   Object.entries(ATTACK_SETS).map(([weapon, attacks]) => [
     weapon,
     Object.freeze(Object.fromEntries(attacks
-      .filter((attack) => attack.horizontalSweep)
+      .filter((attack) => Number.isFinite(attack.armStartDeg) && Number.isFinite(attack.armEndDeg))
       .map((attack) => [
         attack.profile,
         Object.freeze({ startDeg: attack.armStartDeg, endDeg: attack.armEndDeg })
@@ -1311,13 +1319,17 @@ function isKnownBuildAsset(name) {
   return MODEL_NAMES.includes(name) || Boolean(BUILD_ASSET_DEFINITIONS[name]);
 }
 
+const HELFER_PRAEFIXE = Object.freeze(['COLLIDER_', 'TRIGGER_', 'SNAP_', 'SOCKET_', 'DIRECTION_']);
+
 function prepareModel(root) {
   root.traverse((child) => {
     if (!child.isMesh) return;
     let colliderNode = child;
     let hiddenCollider = false;
+    // Hilfsknoten aus den Modellen: Kollider, Ausloeser, Rast- und Steckpunkte.
+    // Sie beschreiben Verhalten und duerfen nie sichtbar sein.
     while (colliderNode && colliderNode !== root.parent) {
-      if (colliderNode.name?.startsWith('COLLIDER_')) {
+      if (HELFER_PRAEFIXE.some((praefix) => colliderNode.name?.startsWith(praefix))) {
         hiddenCollider = true;
         break;
       }
@@ -1354,6 +1366,8 @@ function prepareModel(root) {
 
 async function loadAssets() {
   let complete = 0;
+  THREE.Cache.enabled = true;
+  await new THREE.TextureLoader().loadAsync(`${MODEL_ROOT}Textures/colormap.png`).catch(() => null);
   await Promise.all(MODEL_NAMES.map(async (name) => {
     const source = MODEL_SOURCES[name] ?? `${MODEL_ROOT}${name}.glb`;
     const gltf = await loader.loadAsync(source);
@@ -1768,9 +1782,13 @@ function previewIdleVariantId() {
   return selectedEquipmentAnimation === 'idle' ? 'calm' : null;
 }
 
+function hasArmSweepAngles(attack) {
+  return Number.isFinite(attack?.armStartDeg) && Number.isFinite(attack?.armEndDeg);
+}
+
 function playerSickleMotionState() {
   if (!playerRoot) return null;
-  if (equipmentOpen && ['attack4', 'attack5'].includes(selectedEquipmentAnimation)
+  if (equipmentOpen && HORIZONTAL_SWEEP_PROFILE_KEYS.includes(selectedEquipmentAnimation)
     && ['sword', 'spear'].includes(selectedEquipmentPart)) {
     const attack = ATTACK_SETS[selectedEquipmentPart]
       ?.find((entry) => entry.profile === selectedEquipmentAnimation);
@@ -1781,17 +1799,21 @@ function playerSickleMotionState() {
       progress: THREE.MathUtils.clamp(action.time / duration, 0, 1),
       direction: attack.sweepDirection ?? 1,
       reverse: Boolean(attack.reverseSweep),
+      flach: Boolean(attack.horizontalSweep),
+      einsatz: attack.chargeEnd ?? 0.04,
       profile: attack.profile,
       weapon: selectedEquipmentPart
     };
   }
   if (!equipmentOpen && playerAttackTimer > 0) {
     const attack = currentPlayerAttack();
-    if (!attack?.horizontalSweep) return null;
+    if (!hasArmSweepAngles(attack)) return null;
     return {
       progress: currentPlayerAttackProgress(attack),
       direction: attack.sweepDirection ?? 1,
       reverse: Boolean(attack.reverseSweep),
+      flach: Boolean(attack.horizontalSweep),
+      einsatz: attack.chargeEnd ?? 0.04,
       profile: attack.profile,
       weapon: equippedWeapon
     };
@@ -1842,21 +1864,29 @@ function updatePlayerProceduralPose(delta, elapsed) {
     const swing = sickleSweepProgress(sickleMotion.progress, sickleMotion.reverse);
     const armProgress = THREE.MathUtils.smoothstep(sickleMotion.progress, 0.12, 0.88);
     const armConfig = horizontalSweepSettings[sickleMotion.weapon]?.[sickleMotion.profile];
-    const armYaw = armConfig
+    // Start und Ende beide auf 0 heisst: der Arm bleibt bei der Animation.
+    const armAimed = Boolean(armConfig) && (armConfig.startDeg !== 0 || armConfig.endDeg !== 0);
+    const armYaw = armAimed
       ? THREE.MathUtils.lerp(armConfig.startDeg, armConfig.endDeg, armProgress)
       : 0;
-    const reach = THREE.MathUtils.smoothstep(sickleMotion.progress, 0.04, 0.16)
+    // Beim Aufladeangriff faehrt der Arm erst nach der Aufladephase aus.
+    const einsatz = sickleMotion.einsatz ?? 0.04;
+    const reach = THREE.MathUtils.smoothstep(sickleMotion.progress, einsatz, einsatz + 0.12)
       * (1 - THREE.MathUtils.smoothstep(sickleMotion.progress, 0.9, 1));
-    targetTorsoYaw = sickleMotion.direction * THREE.MathUtils.lerp(-0.42, 0.5, swing);
-    targetTorsoPitch = -Math.sin(swing * Math.PI) * 0.045;
-    targetTorsoRoll = sickleMotion.direction * Math.sin(swing * Math.PI) * -0.075;
-    targetHeadYaw = -targetTorsoYaw * 0.38;
-    rightArmSweep = {
-      pitch: -0.08,
-      yaw: THREE.MathUtils.degToRad(armYaw),
-      roll: 0,
-      weight: reach
-    };
+    if (sickleMotion.flach) {
+      targetTorsoYaw = sickleMotion.direction * THREE.MathUtils.lerp(-0.42, 0.5, swing);
+      targetTorsoPitch = -Math.sin(swing * Math.PI) * 0.045;
+      targetTorsoRoll = sickleMotion.direction * Math.sin(swing * Math.PI) * -0.075;
+      targetHeadYaw = -targetTorsoYaw * 0.38;
+    }
+    if (armAimed) {
+      rightArmSweep = {
+        pitch: -0.08,
+        yaw: THREE.MathUtils.degToRad(armYaw),
+        roll: 0,
+        weight: reach
+      };
+    }
   } else if (idle && variantId === 'calm') {
     targetHeadPitch = Math.sin(elapsed * 1.45) * 0.018;
     targetTorsoPitch = Math.sin(elapsed * 1.45 + 0.55) * 0.012;
@@ -1964,6 +1994,14 @@ function spawnSystemMarker(name, x, z, y = 0, options = {}) {
     const diamond = new THREE.Mesh(new THREE.OctahedronGeometry(0.22), material.clone());
     diamond.position.y = 0.83;
     frame.add(diamond);
+  } else if (definition?.type === 'druckplatte') {
+    const platte = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.44, 0.09, 12), material.clone());
+    platte.position.y = 0.13;
+    frame.add(platte);
+  } else if (definition?.type === 'schloss') {
+    const riegel = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.2, 0.16), material.clone());
+    riegel.position.y = 0.86;
+    frame.add(riegel);
   } else {
     const arrival = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8), material.clone());
     arrival.position.y = 0.82;
@@ -2023,8 +2061,16 @@ function spawnModel(name, x, z, y = 0, options = {}) {
   const offsetX = THREE.MathUtils.clamp(Number(options.offsetX) || 0, -0.5, 0.5);
   const offsetZ = THREE.MathUtils.clamp(Number(options.offsetZ) || 0, -0.5, 0.5);
   const baseModelScale = NATIVE_SCALE_MODELS.has(name) ? 1 : modelScale;
+  // Achsenkorrektur, damit ein Bauteil auf ganze Zellen passt, ohne dass die
+  // Editorskalierung ihre Bedeutung verliert.
+  const achsen = options.achsen ?? BUILD_ASSET_DEFINITIONS[placementName]?.achsen ?? null;
   frame.add(model);
-  frame.scale.setScalar(baseModelScale * scale);
+  const grund = baseModelScale * scale;
+  if (achsen) {
+    frame.scale.set(grund * (achsen.x ?? 1), grund * (achsen.y ?? 1), grund * (achsen.z ?? 1));
+  } else {
+    frame.scale.setScalar(grund);
+  }
   holder.add(frame);
   scene.add(holder);
   holder.updateMatrixWorld(true);
@@ -2035,6 +2081,10 @@ function spawnModel(name, x, z, y = 0, options = {}) {
   const mountHeight = Number(options.mountHeight) || 0;
   frame.position.set(-center.x, -bounds.min.y, -center.z);
   frame.position.y += mountHeight;
+  const gehflaeche = BUILD_ASSET_DEFINITIONS[placementName]?.begehbar;
+  if (gehflaeche?.deckIstBoden) {
+    frame.position.y -= gehflaeche.hoehe * grund * (achsen?.y ?? 1);
+  }
   holder.position.set((x + offsetX) * CELL, y, (z + offsetZ) * CELL);
   holder.rotation.y = options.rotation ?? 0;
   holder.userData.assetName = placementName;
@@ -2563,6 +2613,7 @@ function addDefaultRoomEncounters() {
 
   rewardChest = addRewardChest('wachhof', -3.65, -2.65, Math.PI * 0.18, 'helmet');
   addRewardChest('tiefe-wacht', -3.65, -2.65, Math.PI * 0.18, 'hook');
+  addRewardChest('bruchkammer', -3.65, -2.65, Math.PI * 0.18, 'armband');
   addEnemy('wachhof', 'enemy-sword', -1.85, 0.65, -Math.PI * 0.7, { waveId: 'wachhof-welle-1' });
   addEnemy('wachhof', 'enemy-spear', 2.15, 0.95, -Math.PI * 0.75, { waveId: 'wachhof-welle-1', spawnDelay: 0.55 });
   addEnemy('wachhof', 'enemy-sword', -3.55, -1.15, Math.PI * 0.7, { waveId: 'wachhof-welle-2' });
@@ -2595,6 +2646,19 @@ function addDefaultSystemMarkers() {
     roomId: 'wachhof',
     settings: { radius: CELL * 0.95 }
   });
+  // Raetsel 01 "Das Gewicht der Wacht" - steht neben dem Hauptweg, damit ein
+  // Fehler niemanden einsperrt. Wer das Tor oeffnen will, braucht das Fass.
+  spawnBuildAsset('gate', 3.6, -2.6, 0, { roomId: 'wachhof', rotation: Math.PI * 0.5 });
+  spawnBuildAsset('marker-schloss', 3.6, -2.6, 0, {
+    roomId: 'wachhof',
+    settings: { signal: 'tor-hof', wirkung: 'oeffnen', radius: CELL * 1.05 }
+  });
+  spawnBuildAsset('druckplatte-ahnhoehe', 3.6, -0.9, 0, {
+    roomId: 'wachhof',
+    settings: { signal: 'tor-hof', modus: 'halten', gewicht: 1, radius: CELL * 0.62 }
+  });
+  spawnBuildAsset('barrel', 2.5, -0.9, 0.15, { roomId: 'wachhof', rotation: 0.24 });
+
   spawnBuildAsset('marker-exit', 0, -4.05, 0, {
     roomId: 'wachhof',
     rotation: Math.PI,
@@ -2641,6 +2705,35 @@ function addDefaultSystemMarkers() {
   });
 }
 
+// Hier stellst du die Enterhakenkette ein.
+//   dicke        Skalierung quer zur Kette. Groesser = grobere, fettere Glieder.
+//   laenge       Skalierung entlang der Kette. Nur anfassen, wenn die Glieder
+//                gestreckt oder gestaucht aussehen sollen.
+//   ueberlappung Wie weit ein Glied vorrueckt, als Anteil seiner eigenen Laenge.
+//                Im Modell sind es 0.106 von 0.186, also 0.57. Kleiner = dichter.
+//   maxGlieder   Muss die volle Hakenreichweite abdecken, sonst reisst die Kette
+//                auf. Reichweite ist CELL * 5.8.
+const HOOK_CHAIN = Object.freeze({
+  dicke: 2.6,
+  laenge: 1.6,
+  ueberlappung: 0.57,
+  maxGlieder: 88
+});
+// Das Glimmen zwischen den Gliedern. Es liegt hinter der Kette und dreht
+// sich immer zur Kamera, damit es aus jedem Winkel gleich breit wirkt.
+//   farbe   Grundton des Scheins
+//   breite  Bandbreite in Weltmaß. Etwa doppelte Gliedbreite wirkt gut.
+//   staerke Deckkraft in der Mitte
+//   puls    Schwankung pro Sekunde, 0 schaltet sie ab
+const HOOK_GLOW = Object.freeze({
+  farbe: '#e8b169',
+  breite: 0.34,
+  staerke: 0.5,
+  puls: 3.4
+});
+let hookChainPitch = 0.2;
+let hookGlow = null;
+
 function createPlayerHookVisuals() {
   const gltf = assets.get('enterhaken-ahnhoehe');
   if (!gltf) throw new Error('Enterhaken von Ahnhoehe wurde nicht geladen.');
@@ -2672,32 +2765,68 @@ function createPlayerHookVisuals() {
   hookChainRoot.visible = false;
   scene.add(hookChainRoot);
 
-  for (let index = 0; index < 48; index += 1) {
+  for (let index = 0; index < HOOK_CHAIN.maxGlieder; index += 1) {
     const sourceIndex = (index % 9) + 1;
     const source = sourceModel.getObjectByName(`Chain_Link_${String(sourceIndex).padStart(2, '0')}`);
     if (!source) continue;
     const link = source.clone(true);
     link.name = `Ra_Kettenglied_${String(index + 1).padStart(2, '0')}`;
     link.position.set(0, 0, 0);
-    link.scale.multiplyScalar(1.42);
+    link.quaternion.identity();
+    link.scale.set(
+      link.scale.x * HOOK_CHAIN.dicke,
+      link.scale.y * HOOK_CHAIN.laenge,
+      link.scale.z * HOOK_CHAIN.dicke
+    );
     link.userData.baseQuaternion = source.quaternion.clone();
     link.visible = false;
     hookChainRoot.add(link);
     hookChainLinks.push(link);
   }
 
+  // Gliedabstand aus der wirklichen Gliedlaenge ableiten, nicht raten.
+  const probe = hookChainLinks[0];
+  if (probe) {
+    probe.visible = true;
+    probe.updateWorldMatrix(true, true);
+    const box = new THREE.Box3().setFromObject(probe);
+    probe.visible = false;
+    const gliedLaenge = Math.max(box.max.y - box.min.y, 0.02);
+    hookChainPitch = Math.max(0.04, gliedLaenge * HOOK_CHAIN.ueberlappung);
+  }
+
+  // Leuchtband statt Hilfslinie. Eine Linie waere immer genau ein Pixel
+  // breit, egal wie weit sie entfernt ist.
+  const glowGeometry = new THREE.PlaneGeometry(1, 1, 12, 2);
+  const glowColor = new THREE.Color(HOOK_GLOW.farbe);
+  const glowVertexColors = new Float32Array(glowGeometry.attributes.position.count * 3);
+  const glowPos = glowGeometry.attributes.position;
+  for (let index = 0; index < glowPos.count; index += 1) {
+    const quer = 1 - Math.abs(glowPos.getY(index)) * 2;      // Rand dunkel
+    const laengs = 1 - Math.abs(glowPos.getX(index)) * 0.55; // Enden weicher
+    const wert = Math.max(0, quer) ** 1.6 * laengs;
+    glowVertexColors[index * 3] = glowColor.r * wert;
+    glowVertexColors[index * 3 + 1] = glowColor.g * wert;
+    glowVertexColors[index * 3 + 2] = glowColor.b * wert;
+  }
+  glowGeometry.setAttribute('color', new THREE.BufferAttribute(glowVertexColors, 3));
+  hookGlow = new THREE.Mesh(glowGeometry, new THREE.MeshBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: HOOK_GLOW.staerke,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide
+  }));
+  hookGlow.frustumCulled = false;
+  hookGlow.renderOrder = 18;
+  hookGlow.visible = false;
+  scene.add(hookGlow);
+
   const hookPositions = new Float32Array(6);
   const hookGeometry = new THREE.BufferGeometry();
   hookGeometry.setAttribute('position', new THREE.BufferAttribute(hookPositions, 3));
-  hookLine = new THREE.Line(
-    hookGeometry,
-    new THREE.LineBasicMaterial({
-      color: '#8b704d',
-      transparent: true,
-      opacity: 0.46,
-      depthWrite: false
-    })
-  );
+  hookLine = new THREE.Line(hookGeometry, new THREE.LineBasicMaterial({ visible: false }));
   hookLine.visible = false;
   hookLine.frustumCulled = false;
   scene.add(hookLine);
@@ -2717,7 +2846,7 @@ function updatePlayerHookVisuals(start, tip) {
   hookTip.quaternion.copy(alignToChain);
 
   const visibleLinks = THREE.MathUtils.clamp(
-    Math.ceil(distance / 0.2),
+    Math.ceil(distance / hookChainPitch),
     3,
     hookChainLinks.length
   );
@@ -2736,6 +2865,26 @@ function updatePlayerHookVisuals(start, tip) {
   positions.setXYZ(0, start.x, start.y, start.z);
   positions.setXYZ(1, tip.x, tip.y, tip.z);
   positions.needsUpdate = true;
+
+  if (hookGlow) {
+    const mitte = start.clone().add(tip).multiplyScalar(0.5);
+    const zurKamera = camera.position.clone().sub(mitte).normalize();
+    const quer = new THREE.Vector3().crossVectors(direction, zurKamera);
+    // Kette zeigt genau auf die Kamera: dann taugt jede Querachse.
+    if (quer.lengthSq() < 1e-6) quer.crossVectors(direction, new THREE.Vector3(0, 1, 0));
+    quer.normalize();
+    const normale = new THREE.Vector3().crossVectors(direction, quer).normalize();
+    hookGlow.quaternion.setFromRotationMatrix(
+      new THREE.Matrix4().makeBasis(direction, quer, normale)
+    );
+    hookGlow.position.copy(mitte);
+    hookGlow.scale.set(distance, HOOK_GLOW.breite, 1);
+    const puls = HOOK_GLOW.puls > 0
+      ? 1 + Math.sin(performance.now() * 0.001 * HOOK_GLOW.puls) * 0.16
+      : 1;
+    hookGlow.material.opacity = HOOK_GLOW.staerke * puls;
+    hookGlow.visible = true;
+  }
 }
 
 function addPropsAndActors() {
@@ -3065,6 +3214,9 @@ function restoreCombatDestructible(destructible) {
 }
 
 function resetCombatDestructibles() {
+  loesePlayerFass();
+  loeseFelsSchub();
+  leereSignalbrett();
   combatDestructibles.forEach(restoreCombatDestructible);
   if (gameMode && combatNavigationGraph) {
     rebuildCombatNavigation(roomIdForLevel(levelDirector.room));
@@ -4256,7 +4408,16 @@ function setEquipmentView(view) {
 function updateEquipmentTransform(key, value) {
   const transform = equipmentTransforms[selectedEquipmentPart][activeEquipmentProfile()];
   const map = { px: ['position', 0], py: ['position', 1], pz: ['position', 2], rx: ['rotation', 0], ry: ['rotation', 1], rz: ['rotation', 2] };
-  if (key === 'scale') transform.scale = THREE.MathUtils.clamp(value, 0.55, 1.45);
+  if (key === 'scale') {
+    // Die Groesse gehoert zum Gegenstand, nicht zur Pose. Ein Schwert wird
+    // beim Zuschlagen nicht kleiner. Darum gilt der Wert fuer alle Profile,
+    // sonst muss man ihn neunmal nachziehen.
+    const groesse = THREE.MathUtils.clamp(value, 0.55, 1.45);
+    EQUIPMENT_PROFILE_KEYS.forEach((profil) => {
+      const eintrag = equipmentTransforms[selectedEquipmentPart]?.[profil];
+      if (eintrag) eintrag.scale = groesse;
+    });
+  }
   else if (map[key]) transform[map[key][0]][map[key][1]] = value;
   applyEquipmentSocketTransform(selectedEquipmentPart);
   updatePlayerWeapon();
@@ -5522,7 +5683,7 @@ function usePotion() {
 }
 
 function setPlayerShielding(enabled) {
-  playerShielding = Boolean(enabled && gameMode && !qaPanelOpen && !gameMenuOpen && !inventoryOpen && !equipmentOpen && !rewardOpen && !supplyOpen
+  playerShielding = Boolean(enabled && gameMode && !getragenesFass && !qaPanelOpen && !gameMenuOpen && !inventoryOpen && !equipmentOpen && !rewardOpen && !supplyOpen
     && playerHealth > 0 && playerStamina > 0.04 && playerFallTimer <= 0
     && playerRecoveryStunTimer <= 0 && playerHurtTimer <= 0);
   if (playerShielding) cancelPlayerAttackCharge();
@@ -5589,6 +5750,7 @@ function cancelPlayerHook() {
   playerHookStartY = playerRoot?.position.y ?? ACTOR_GROUND_OFFSET;
   playerHookLandingY = playerHookStartY;
   if (hookLine) hookLine.visible = false;
+  if (hookGlow) hookGlow.visible = false;
   if (hookTip) hookTip.visible = false;
   if (hookChainRoot) hookChainRoot.visible = false;
   hookChainLinks.forEach((link) => { link.visible = false; });
@@ -5596,8 +5758,450 @@ function cancelPlayerHook() {
   hookButton.classList.remove('is-active');
 }
 
+// ---------------------------------------------------------------------------
+// Geber und Nehmer
+// Ein Geber setzt ein frei benanntes Signal auf an oder aus, ein Nehmer horcht
+// darauf. Zwischen beiden liegt nur eine Zeichenkette - kein Objektverweis.
+// Darum laesst sich das Brett auch nach Godot mitnehmen.
+// ---------------------------------------------------------------------------
+const raumSignale = new Map();
+const eingerasteteSignale = new Set();
+
+function signalAn(name) {
+  return Boolean(name) && raumSignale.get(name) === true;
+}
+
+function setzeSignal(name, an) {
+  if (!name) return;
+  if (raumSignale.get(name) === Boolean(an)) return;
+  raumSignale.set(name, Boolean(an));
+  aktualisiereSchloesser();
+  playTone(an ? 262 : 175, 0.09, 0.016, 0, 'triangle');
+}
+
+function leereSignalbrett() {
+  raumSignale.clear();
+  eingerasteteSignale.clear();
+  editableRoots.forEach((root) => {
+    if (!root.userData.offen) return;
+    root.userData.offen = false;
+    root.position.y = root.userData.signalGrundhoehe ?? root.position.y;
+  });
+  aktualisiereSchloesser();
+}
+
+function markerListe(typ, roomId) {
+  return editableRoots.filter((root) => root.userData.systemMarker === typ
+    && root.userData.roomId === roomId);
+}
+
+// --- Geber: Druckplatte ----------------------------------------------------
+
+function koerperAufPlatte(marker, radius) {
+  const markerY = marker.position.y;
+  let anzahl = 0;
+  const passt = (position) => Math.hypot(position.x - marker.position.x, position.z - marker.position.z) < radius
+    && Math.abs(position.y - markerY) < CELL * 0.7;
+  if (playerHealth > 0 && passt(playerRoot.position)) anzahl += 1;
+  combatDestructibles.forEach((eintrag) => {
+    if (eintrag.destroyed || eintrag.root.userData.getragen) return;
+    if (passt(eintrag.root.position)) anzahl += 1;
+  });
+  combatEnemies.forEach((gegner) => {
+    if (!gegner.active || !gegner.alive) return;
+    if (passt(gegner.root.position)) anzahl += 1;
+  });
+  return anzahl;
+}
+
+const DRUCKPLATTE_ASSET = 'druckplatte-ahnhoehe';
+
+function istDruckplatte(root) {
+  return root.userData.systemMarker === 'druckplatte'
+    || root.userData.assetName === DRUCKPLATTE_ASSET;
+}
+
+// Der unsichtbare Marker und das Modell teilen sich dieselben Felder.
+function plattenEinstellungen(root) {
+  const vorgabe = BUILD_ASSET_DEFINITIONS[root.userData.assetName]?.druckplatte ?? {};
+  const s = root.userData.placement?.settings ?? {};
+  return {
+    signal: String(s.signal ?? vorgabe.signal ?? '').trim(),
+    modus: s.modus === 'rasten' ? 'rasten' : 'halten',
+    gewicht: THREE.MathUtils.clamp(Math.round(Number(s.gewicht ?? vorgabe.gewicht) || 1), 1, 4),
+    radius: THREE.MathUtils.clamp(Number(s.radius ?? vorgabe.radius) || CELL * 0.62, 0.3, 6)
+  };
+}
+
+function updateDruckplatten() {
+  const roomId = roomIdForLevel(levelDirector.room);
+  editableRoots.forEach((platte) => {
+    if (platte.userData.roomId !== roomId || !istDruckplatte(platte)) return;
+    const { signal, modus, gewicht, radius } = plattenEinstellungen(platte);
+    if (!signal) return;
+    const rastend = modus === 'rasten';
+    const belastet = koerperAufPlatte(platte, radius) >= gewicht;
+    if (rastend && belastet) eingerasteteSignale.add(signal);
+    setzeSignal(signal, belastet || (rastend && eingerasteteSignale.has(signal)));
+    const gedrueckt = signalAn(signal);
+    if (Boolean(platte.userData.platteGedrueckt) === gedrueckt) return;
+    platte.userData.platteGedrueckt = gedrueckt;
+    if (platte.userData.actions?.size) {
+      // Das Modell bringt eigene Bewegungen mit.
+      playActorAnimation(platte, gedrueckt ? 'pressureplate_press' : 'pressureplate_release',
+        { once: true, restart: true, speed: 1, fade: 0.06 });
+    } else {
+      platte.scale.setScalar(gedrueckt ? 0.72 : 1);
+    }
+  });
+}
+
+// --- Nehmer: Schloss -------------------------------------------------------
+
+function aktualisiereSchloesser() {
+  if (!gameMode) return;
+  const roomId = roomIdForLevel(levelDirector.room);
+  markerListe('schloss', roomId).forEach((marker) => {
+    const settings = marker.userData.placement?.settings ?? {};
+    const signal = String(settings.signal ?? '').trim();
+    if (!signal) return;
+    const radius = THREE.MathUtils.clamp(Number(settings.radius) || CELL * 1.05, 0.3, 8);
+    const an = signalAn(signal);
+    const offen = settings.wirkung === 'schliessen' ? !an : an;
+    editableRoots.forEach((root) => {
+      if (root.userData.roomId !== roomId) return;
+      // Nur Bauteile, die ausdruecklich dafuer vorgesehen sind. Ohne diese
+      // Bedingung hebt das Schloss auch den Boden - Boeden sind begehbar.
+      if (!BUILD_ASSET_DEFINITIONS[root.userData.assetName]?.signalBeweglich) return;
+      if (horizontalDistanceBetween(root, marker) > radius) return;
+      if (root.userData.signalGrundhoehe === undefined) root.userData.signalGrundhoehe = root.position.y;
+      root.userData.offen = offen;
+      root.userData.signalZielhoehe = root.userData.signalGrundhoehe + (offen ? CELL * 0.94 : 0);
+    });
+  });
+}
+
+function updateSignalTore(delta) {
+  editableRoots.forEach((root) => {
+    const ziel = root.userData.signalZielhoehe;
+    if (ziel === undefined) return;
+    if (Math.abs(root.position.y - ziel) < 0.002) return;
+    root.position.y = THREE.MathUtils.damp(root.position.y, ziel, 6.5, delta);
+  });
+}
+
+function updateSignale(delta) {
+  updateDruckplatten();
+  updateSignalTore(delta);
+}
+
+// ---------------------------------------------------------------------------
+// Felsblöcke schieben
+// Der Fels ist genau eine Zelle gross. Darum rueckt er Feld fuer Feld vor -
+// ein Block, der eine Zelle fuellt, kann nur buendig oder schief liegen.
+// Voraussetzung ist das Armband der unbaendigen Ahnenkraft.
+// ---------------------------------------------------------------------------
+const FELS = Object.freeze({
+  asset: 'rocks',
+  reichweite: CELL * 1.05,
+  ausrichtung: 0.55,
+  dauer: 0.46,
+  hoehenToleranz: CELL * 0.6
+});
+
+let felsSchub = null;
+
+function armbandGetragen() {
+  return isEquipmentUnlocked(equipmentProgress, 'armband');
+}
+
+// Auf die vier Rasterachsen einrasten.
+function rasterRichtung(winkel) {
+  const viertel = Math.round(winkel / (Math.PI * 0.5)) * (Math.PI * 0.5);
+  const x = Math.round(Math.sin(viertel));
+  const z = Math.round(Math.cos(viertel));
+  return new THREE.Vector3(x, 0, z);
+}
+
+function findeSchiebbarenFels() {
+  const richtung = rasterRichtung(playerRoot.rotation.y);
+  const roomId = combatRoomIdForRoot(playerRoot);
+  return editableRoots
+    .filter((root) => root.userData.roomId === roomId
+      && root.userData.assetName === FELS.asset
+      && root.visible
+      && !root.userData.wirdGeschoben)
+    .map((root) => {
+      const versatz = root.position.clone().sub(playerRoot.position);
+      const hoehe = Math.abs(versatz.y);
+      versatz.y = 0;
+      const abstand = versatz.length();
+      const treffer = abstand > 0.001 ? richtung.dot(versatz.normalize()) : -1;
+      return { root, abstand, treffer, hoehe };
+    })
+    .filter((k) => k.abstand < FELS.reichweite
+      && k.hoehe < FELS.hoehenToleranz
+      && k.treffer > FELS.ausrichtung)
+    .sort((a, b) => a.abstand - b.abstand)[0]?.root ?? null;
+}
+
+function zielfeldFrei(fels, ziel) {
+  // Boden muss da sein, sonst schoebe man den Fels ins Leere.
+  const boden = combatSurfaceAt(ziel, fels, { allowAnyHeight: true });
+  if (!boden) return false;
+  if (Math.abs(boden.y - ACTOR_GROUND_OFFSET - fels.position.y) > CELL * 0.35) return false;
+  // Nichts darf im Zielfeld stehen. Der Fels selbst zaehlt nicht.
+  return !isCombatPositionBlocked(ziel, CELL * 0.42, fels);
+}
+
+function schiebeFels() {
+  if (felsSchub || !armbandGetragen()) return false;
+  const fels = findeSchiebbarenFels();
+  if (!fels) return false;
+  const richtung = rasterRichtung(playerRoot.rotation.y);
+  const ziel = fels.position.clone().addScaledVector(richtung, CELL);
+  if (!zielfeldFrei(fels, ziel)) {
+    showCombatMessage('DER FELS SITZT FEST', 0.7);
+    playTone(96, 0.14, 0.022, 0, 'square');
+    return true;
+  }
+  fels.userData.wirdGeschoben = true;
+  felsSchub = {
+    fels,
+    von: fels.position.clone(),
+    nach: ziel,
+    zeit: 0,
+    spielerVon: playerRoot.position.clone(),
+    spielerNach: playerRoot.position.clone().addScaledVector(richtung, CELL)
+  };
+  playActorAnimation(playerRoot, 'holding-both', { restart: true, speed: 0.7, fade: 0.08 });
+  playTone(132, 0.2, 0.026, 0, 'sawtooth');
+  return true;
+}
+
+function loeseFelsSchub() {
+  if (!felsSchub) return;
+  felsSchub.fels.userData.wirdGeschoben = false;
+  felsSchub = null;
+}
+
+function updateFelsSchub(delta) {
+  if (!felsSchub) return;
+  const schub = felsSchub;
+  schub.zeit += delta;
+  const anteil = THREE.MathUtils.clamp(schub.zeit / FELS.dauer, 0, 1);
+  const weich = anteil * anteil * (3 - 2 * anteil);
+  schub.fels.position.lerpVectors(schub.von, schub.nach, weich);
+  // Der Spieler geht mit, sonst steht er im Fels.
+  playerRoot.position.lerpVectors(schub.spielerVon, schub.spielerNach, weich);
+  if (anteil < 1) return;
+  schub.fels.position.copy(schub.nach);
+  schub.fels.userData.wirdGeschoben = false;
+  rebuildCombatNavigation(combatRoomIdForRoot(schub.fels));
+  felsSchub = null;
+  playTone(88, 0.16, 0.03, 0, 'triangle');
+}
+
+function spielerIstBeschaeftigt() {
+  return Boolean(felsSchub);
+}
+
+// ---------------------------------------------------------------------------
+// Fass tragen, ablegen, werfen
+// Ein getragenes Fass blockiert nichts und nimmt keinen Schaden. Beim Werfen
+// wird es zu einer eigenen Schadensquelle - der Kampfkern bleibt unberuehrt.
+// ---------------------------------------------------------------------------
+const FASS = Object.freeze({
+  aufhebeReichweite: CELL * 0.95,
+  tragHoehe: 0.34,
+  tragAbstand: 0.58,
+  abwurfHoehe: 0.5,
+  abwurfAbstand: 0.85,
+  // Weit genug vor den Fuessen, sonst steht die Figur im abgelegten Fass.
+  ablegeAbstand: CELL * 0.62,
+  ablegeNotAbstand: CELL * 0.42,
+  schonzeit: 0.07,
+  wurfTempo: 12.5,
+  wurfHub: 4.6,
+  schwerkraft: 19,
+  trefferRadius: CELL * 0.34,
+  schaden: 2,
+  wucht: 14,
+  flugZeitMax: 2.2
+});
+
+let getragenesFass = null;
+let fassFlug = null;
+
+function fassVorne(abstand, hoehe) {
+  const richtung = new THREE.Vector3(
+    Math.sin(playerRoot.rotation.y),
+    0,
+    Math.cos(playerRoot.rotation.y)
+  );
+  return playerRoot.position.clone().addScaledVector(richtung, abstand).setY(playerRoot.position.y + hoehe);
+}
+
+function findeTragbaresFass() {
+  const vorne = new THREE.Vector3(Math.sin(playerRoot.rotation.y), 0, Math.cos(playerRoot.rotation.y));
+  return combatDestructibles
+    .filter((eintrag) => !eintrag.destroyed && eintrag.root.visible && !eintrag.root.userData.getragen)
+    .map((eintrag) => {
+      const versatz = eintrag.root.position.clone().sub(playerRoot.position);
+      const hoehenUnterschied = Math.abs(versatz.y);
+      versatz.y = 0;
+      const abstand = versatz.length();
+      const ausrichtung = abstand > 0.001 ? vorne.dot(versatz.normalize()) : -1;
+      return { eintrag, abstand, ausrichtung, hoehenUnterschied };
+    })
+    .filter((kandidat) => kandidat.abstand < FASS.aufhebeReichweite
+      && kandidat.hoehenUnterschied < CELL * 0.6
+      && kandidat.ausrichtung > -0.25)
+    .sort((a, b) => a.abstand - b.abstand)[0]?.eintrag ?? null;
+}
+
+function spielerKannFassGreifen() {
+  return gameMode && playerHealth > 0 && !qaPanelOpen && !gameMenuOpen && !inventoryOpen
+    && !equipmentOpen && !rewardOpen && !supplyOpen
+    && playerAttackTimer <= 0 && playerDodgeTimer <= 0 && playerHookTimer <= 0
+    && playerFallTimer <= 0 && playerRecoveryStunTimer <= 0 && playerHurtTimer <= 0;
+}
+
+function hebeFassAuf(eintrag) {
+  getragenesFass = eintrag;
+  eintrag.root.userData.getragen = true;
+  setPlayerShielding(false);
+  rebuildCombatNavigation(combatRoomIdForRoot(eintrag.root));
+  playActorAnimation(playerRoot, 'pick-up', { once: true, restart: true, speed: 1.35, fade: 0.05 });
+  playTone(196, 0.1, 0.02, 0, 'triangle');
+  showCombatMessage('FASS AUFGENOMMEN', 0.7);
+}
+
+function legeFassAb() {
+  if (!getragenesFass) return;
+  const eintrag = getragenesFass;
+  // Erst weit vorn versuchen. Steht da eine Wand, naeher heran, aber nie in die Figur.
+  let platz = fassVorne(FASS.ablegeAbstand, 0);
+  let boden = combatSurfaceAt(platz, playerRoot, { allowAnyHeight: true })?.y;
+  if (!Number.isFinite(boden)) {
+    platz = fassVorne(FASS.ablegeNotAbstand, 0);
+    boden = combatSurfaceAt(platz, playerRoot, { allowAnyHeight: true })?.y;
+  }
+  eintrag.root.position.set(platz.x, Number.isFinite(boden) ? boden : playerRoot.position.y, platz.z);
+  eintrag.root.userData.getragen = false;
+  getragenesFass = null;
+  rebuildCombatNavigation(combatRoomIdForRoot(eintrag.root));
+  playActorAnimation(playerRoot, 'pick-up', { once: true, restart: true, speed: 1.1, fade: 0.05 });
+  playTone(140, 0.12, 0.02, 0, 'triangle');
+}
+
+function wirfFass() {
+  if (!getragenesFass) return false;
+  const eintrag = getragenesFass;
+  const richtung = new THREE.Vector3(Math.sin(playerRoot.rotation.y), 0, Math.cos(playerRoot.rotation.y));
+  // Das Armband verstaerkt den Wurf, statt ihn erst zu erlauben.
+  const kraft = armbandGetragen() ? 1.45 : 1;
+  // Vom Koerper weg starten, sonst trifft das Fass sofort, was direkt daneben steht.
+  eintrag.root.position.copy(fassVorne(FASS.abwurfAbstand, FASS.abwurfHoehe));
+  fassFlug = {
+    eintrag,
+    geschwindigkeit: richtung.clone().multiplyScalar(FASS.wurfTempo * kraft).setY(FASS.wurfHub * kraft),
+    kraft,
+    richtung,
+    lebenszeit: 0,
+    drehung: new THREE.Vector3(0.7, 0.35, 1.15).multiplyScalar(6.2)
+  };
+  getragenesFass = null;
+  playActorAnimation(playerRoot, 'attack-melee-right', { once: true, restart: true, speed: 1.5, fade: 0.03 });
+  playPlayerAttackSound(0);
+  return true;
+}
+
+function zerbrichFass(eintrag, richtung) {
+  eintrag.root.userData.getragen = false;
+  eintrag.root.visible = true;
+  damageCombatDestructible(eintrag, eintrag.maxHealth, richtung, { impactScale: 1.25 });
+}
+
+function loesePlayerFass() {
+  if (getragenesFass) {
+    getragenesFass.root.userData.getragen = false;
+    getragenesFass = null;
+  }
+  if (fassFlug) {
+    fassFlug.eintrag.root.userData.getragen = false;
+    fassFlug = null;
+  }
+}
+
+function updateGetragenesFass() {
+  if (!getragenesFass) return;
+  const eintrag = getragenesFass;
+  if (eintrag.destroyed) { getragenesFass = null; return; }
+  const platz = fassVorne(FASS.tragAbstand, FASS.tragHoehe);
+  eintrag.root.position.copy(platz);
+  eintrag.root.rotation.y = playerRoot.rotation.y;
+}
+
+function updateFassFlug(delta) {
+  if (!fassFlug) return;
+  const flug = fassFlug;
+  const eintrag = flug.eintrag;
+  const root = eintrag.root;
+  flug.lebenszeit += delta;
+  const scharf = flug.lebenszeit > FASS.schonzeit;
+  flug.geschwindigkeit.y -= FASS.schwerkraft * delta;
+  root.position.addScaledVector(flug.geschwindigkeit, delta);
+  root.rotation.x += flug.drehung.x * delta;
+  root.rotation.y += flug.drehung.y * delta;
+  root.rotation.z += flug.drehung.z * delta;
+
+  // Gegner zuerst - das ist der Grund, warum man ueberhaupt wirft.
+  const getroffenerGegner = scharf && combatEnemies.find((gegner) => gegner.active && gegner.alive
+    && gegner.root.position.distanceTo(root.position) < FASS.trefferRadius + (gegner.bodyRadius ?? 0.3));
+  if (getroffenerGegner) {
+    damageEnemy(getroffenerGegner, Math.round(FASS.schaden * (flug.kraft ?? 1)), flug.richtung.clone(), {
+      knockback: FASS.wucht * (flug.kraft ?? 1),
+      impactScale: 1.3
+    });
+    fassFlug = null;
+    zerbrichFass(eintrag, flug.richtung);
+    return;
+  }
+
+  // Andere Faesser zerlegen
+  const getroffenesFass = scharf && combatDestructibles.find((anderes) => anderes !== eintrag
+    && !anderes.destroyed && anderes.root.visible && !anderes.root.userData.getragen
+    && anderes.root.position.distanceTo(root.position) < FASS.trefferRadius + CELL * 0.28);
+  if (getroffenesFass) {
+    fassFlug = null;
+    damageCombatDestructible(getroffenesFass, getroffenesFass.maxHealth, flug.richtung.clone(), { impactScale: 1.1 });
+    zerbrichFass(eintrag, flug.richtung);
+    return;
+  }
+
+  const boden = combatSurfaceAt(root.position, playerRoot, { allowAnyHeight: true })?.y;
+  if ((scharf && Number.isFinite(boden) && root.position.y <= boden + 0.06) || flug.lebenszeit > FASS.flugZeitMax) {
+    if (Number.isFinite(boden)) root.position.y = boden;
+    fassFlug = null;
+    zerbrichFass(eintrag, flug.richtung);
+  }
+}
+
+function fassInteraktion() {
+  if (!spielerKannFassGreifen()) return false;
+  if (getragenesFass) { legeFassAb(); return true; }
+  const kandidat = findeTragbaresFass();
+  if (!kandidat) return false;
+  hebeFassAuf(kandidat);
+  return true;
+}
+
 function startPlayerHook() {
   if (openRewardChest()) return;
+  if (fassInteraktion()) return;
+  if (getragenesFass) return;
+  if (schiebeFels()) return;
   if (!isEquipmentUnlocked(equipmentProgress, 'hook')) {
     showCombatMessage('ENTERHAKEN NOCH NICHT GEFUNDEN', 0.85);
     return;
@@ -6318,6 +6922,158 @@ function spawnAttackChargeRing(weapon = equippedWeapon) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Klingenspur
+// Ein durchgehendes Band entlang der tatsaechlichen Klingenbahn. Es ersetzt
+// keine bestehende Wirkung, sondern liegt zusaetzlich ueber dem Schwung.
+// ---------------------------------------------------------------------------
+const BLADE_TRAIL_MAX_SEGMENTS = 34;
+const BLADE_TRAIL_LIFE = 0.26;
+const BLADE_TRAIL_MIN_STEP = 0.01;
+// Hier stellst du die Spur ein. Alle Werte in lokalen Modellmassen der Waffe.
+//   ansatz     Wo die Spur an der Waffe beginnt. Kleiner = naeher am Griff.
+//   spitze     Wo die Klinge endet.
+//   ueberhang  Wie weit die Spur ueber die Spitze hinausreicht. Groesser = breiteres Band.
+//   kanteGrad  In welche Richtung die Spur seitlich versetzt wird. 0 / 90 / 180 / 270
+//              drehen sie um die Klingenachse. Damit legst du fest, welche Seite
+//              die Schlagseite sein soll.
+//   kanteTiefe Wie weit sie in diese Richtung versetzt wird. 0 = mittig auf der Klinge.
+const BLADE_TRAIL_EXTENTS = Object.freeze({
+  sword: Object.freeze({ ansatz: 0.02, spitze: 0.35, ueberhang: 0.2, kanteGrad: 0, kanteTiefe: 0 }),
+  spear: Object.freeze({ ansatz: 0.18, spitze: 0.6, ueberhang: 0.22, kanteGrad: 0, kanteTiefe: 0 })
+});
+
+const bladeTrail = {
+  mesh: null,
+  geometry: null,
+  positions: null,
+  colors: null,
+  samples: [],
+  weapon: null,
+  active: false,
+  color: new THREE.Color('#cdefff'),
+  strength: 0.9
+};
+const bladeTrailTip = new THREE.Vector3();
+const bladeTrailBase = new THREE.Vector3();
+
+function createBladeTrailMesh() {
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(BLADE_TRAIL_MAX_SEGMENTS * 2 * 3);
+  const colors = new Float32Array(BLADE_TRAIL_MAX_SEGMENTS * 2 * 3);
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const indices = [];
+  for (let index = 0; index < BLADE_TRAIL_MAX_SEGMENTS - 1; index += 1) {
+    const corner = index * 2;
+    indices.push(corner, corner + 1, corner + 3, corner, corner + 3, corner + 2);
+  }
+  geometry.setIndex(indices);
+  geometry.setDrawRange(0, 0);
+  const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide
+  }));
+  mesh.frustumCulled = false;
+  mesh.renderOrder = 21;
+  mesh.visible = false;
+  scene.add(mesh);
+  bladeTrail.mesh = mesh;
+  bladeTrail.geometry = geometry;
+  bladeTrail.positions = positions;
+  bladeTrail.colors = colors;
+}
+
+function startBladeTrail(weapon, step) {
+  if (!bladeTrail.mesh) createBladeTrailMesh();
+  const config = attackFxSettings[weapon]?.[ATTACK_FX_PROFILE_KEYS[step]];
+  bladeTrail.weapon = weapon;
+  bladeTrail.active = true;
+  bladeTrail.samples.length = 0;
+  bladeTrail.color.set(config?.color ?? '#cdefff');
+  bladeTrail.strength = THREE.MathUtils.clamp(config?.opacity ?? 0.9, 0.2, 1);
+}
+
+function stopBladeTrail() {
+  bladeTrail.active = false;
+}
+
+function clearBladeTrail() {
+  bladeTrail.active = false;
+  bladeTrail.samples.length = 0;
+  if (bladeTrail.mesh) {
+    bladeTrail.mesh.visible = false;
+    bladeTrail.geometry.setDrawRange(0, 0);
+  }
+}
+
+function updateBladeTrail(delta) {
+  if (!bladeTrail.mesh) return;
+  if (!gameMode) {
+    clearBladeTrail();
+    return;
+  }
+  const samples = bladeTrail.samples;
+  for (let index = samples.length - 1; index >= 0; index -= 1) {
+    samples[index].age += delta;
+    if (samples[index].age >= BLADE_TRAIL_LIFE) samples.splice(index, 1);
+  }
+
+  const model = bladeTrail.active ? equipmentSockets.get(bladeTrail.weapon)?.model : null;
+  if (model?.visible) {
+    const extents = BLADE_TRAIL_EXTENTS[bladeTrail.weapon] ?? BLADE_TRAIL_EXTENTS.sword;
+    model.updateWorldMatrix(true, false);
+    const kante = THREE.MathUtils.degToRad(extents.kanteGrad);
+    const seitlichX = Math.sin(kante) * extents.kanteTiefe;
+    const seitlichZ = Math.cos(kante) * extents.kanteTiefe;
+    bladeTrailBase.set(seitlichX, extents.ansatz, seitlichZ).applyMatrix4(model.matrixWorld);
+    bladeTrailTip
+      .set(seitlichX, extents.spitze + extents.ueberhang, seitlichZ)
+      .applyMatrix4(model.matrixWorld);
+    const last = samples[samples.length - 1];
+    if (!last || last.tip.distanceTo(bladeTrailTip) > BLADE_TRAIL_MIN_STEP) {
+      samples.push({ tip: bladeTrailTip.clone(), base: bladeTrailBase.clone(), age: 0 });
+      if (samples.length > BLADE_TRAIL_MAX_SEGMENTS) samples.shift();
+    }
+  }
+
+  const count = samples.length;
+  if (count < 2) {
+    bladeTrail.mesh.visible = false;
+    bladeTrail.geometry.setDrawRange(0, 0);
+    return;
+  }
+
+  const { positions, colors, color, strength } = bladeTrail;
+  for (let index = 0; index < count; index += 1) {
+    const sample = samples[index];
+    const offset = index * 6;
+    positions[offset] = sample.base.x;
+    positions[offset + 1] = sample.base.y;
+    positions[offset + 2] = sample.base.z;
+    positions[offset + 3] = sample.tip.x;
+    positions[offset + 4] = sample.tip.y;
+    positions[offset + 5] = sample.tip.z;
+    const fade = 1 - sample.age / BLADE_TRAIL_LIFE;
+    const head = (index + 1) / count;
+    const inner = fade * fade * head * strength * 0.42;
+    const outer = fade * head * strength * 0.85;
+    colors[offset] = color.r * inner;
+    colors[offset + 1] = color.g * inner;
+    colors[offset + 2] = color.b * inner;
+    colors[offset + 3] = Math.min(1, color.r * outer + outer * 0.16);
+    colors[offset + 4] = Math.min(1, color.g * outer + outer * 0.16);
+    colors[offset + 5] = Math.min(1, color.b * outer + outer * 0.16);
+  }
+  bladeTrail.geometry.attributes.position.needsUpdate = true;
+  bladeTrail.geometry.attributes.color.needsUpdate = true;
+  bladeTrail.geometry.setDrawRange(0, (count - 1) * 6);
+  bladeTrail.mesh.visible = true;
+}
+
 function addSwingBlockTrail(root, step, config, isSpear, sweepDirection = 1) {
   const whirlwind = step === 5;
   const sickle = step === 3 || step === 4;
@@ -7015,13 +7771,13 @@ function resolveConfiguredRewardChest(drop) {
     finishRewardChestResolution(`${drop.amount} MUENZEN`);
     return;
   }
-  if (drop.type === 'helmet' || drop.type === 'hook') {
+  if (['helmet', 'hook', 'armband'].includes(drop.type)) {
     const result = unlockEquipmentForPlayer(drop.type, {
       revealOrigin: rewardChest.position
     });
     finishRewardChestResolution(
       result.definition?.displayName.toUpperCase() ?? 'AUSRUESTUNG GEFUNDEN',
-      drop.type === 'hook' ? 'spear' : 'sword'
+      drop.type === 'helmet' ? 'sword' : 'spear'
     );
     return;
   }
@@ -7388,7 +8144,9 @@ function horizontalDistanceBetween(first, second) {
 }
 
 function exitMarkerIsAvailable(marker) {
-  const condition = marker.userData.placement.settings?.condition ?? 'clear';
+  const settings = marker.userData.placement.settings ?? {};
+  const condition = settings.condition ?? 'clear';
+  if (condition === 'signal') return signalAn(String(settings.signal ?? '').trim());
   return condition === 'always'
     || waveDirector.state === WAVE_STATES.EXIT_READY
     || waveDirector.state === WAVE_STATES.VICTORY;
@@ -7859,7 +8617,7 @@ function navigationPositionBlocked(position, sourceRoot, roomRoots) {
   if (stairFlanksOccupyPosition(position, actorRadius, CELL * 0.72, roomId)) return true;
   return roomRoots.some((root) => {
     if (root === sourceRoot || !SOLID_ASSETS.has(root.userData.assetName)) return false;
-    if (root.userData.combatDestructible?.destroyed) return false;
+    if (root.userData.combatDestructible?.destroyed || root.userData.getragen || root.userData.offen) return false;
     const obstacleMinY = root.position.y;
     const obstacleMaxY = obstacleMinY
       + Math.max(CELL * 0.16, Number(root.userData.modelHeight) || CELL * 0.82);
@@ -7930,7 +8688,7 @@ function buildCombatNavigationGraph(roomId) {
   );
   const obstacleIndex = combatNavigationSpatialIndex(
     roomRoots.filter((root) => SOLID_ASSETS.has(root.userData.assetName)
-      && !root.userData.combatDestructible?.destroyed)
+      && !root.userData.combatDestructible?.destroyed && !root.userData.getragen && !root.userData.offen)
   );
 
   roomRoots.forEach((root) => {
@@ -8280,6 +9038,24 @@ function combatSurfaceCandidate(root, position) {
     };
   }
   if (!WALKABLE_SURFACE_ASSETS.has(assetName)) return null;
+  // Bauteile duerfen eine eigene Gehflaeche mitbringen. Ohne Angabe gilt wie
+  // bisher eine Zelle und die Oberkante des Fusses.
+  const flaeche = BUILD_ASSET_DEFINITIONS[assetName]?.begehbar;
+  if (flaeche) {
+    const gesamtSkalierung = (Number(root.userData.baseModelScale) || 1)
+      * THREE.MathUtils.clamp(Number(root.userData.placement?.scale) || 1, 0.35, 3);
+    const achsen = BUILD_ASSET_DEFINITIONS[assetName]?.achsen ?? {};
+    if (Math.abs(local.x) > flaeche.halbeBreite * gesamtSkalierung * (achsen.x ?? 1)) return null;
+    if (Math.abs(local.z) > flaeche.halbeLaenge * gesamtSkalierung * (achsen.z ?? 1)) return null;
+    const deckHoehe = flaeche.deckIstBoden
+      ? 0
+      : flaeche.hoehe * gesamtSkalierung * (achsen.y ?? 1);
+    return {
+      y: root.position.y + deckHoehe + ACTOR_GROUND_OFFSET,
+      slope: false,
+      root
+    };
+  }
   const half = CELL * 0.53;
   if (Math.abs(local.x) > half || Math.abs(local.z) > half) return null;
   const bridgeLift = assetName === 'wood-structure' ? 0.18 : 0;
@@ -8648,7 +9424,7 @@ function weaponWorldContactAt(position, radius, direction, options = {}) {
   const actorMaxY = actorMinY + actorHeight;
   for (const root of editableRootsForRoom(roomId)) {
     if (!root.visible || root === options.ignoreRoot || !SOLID_ASSETS.has(root.userData.assetName)) continue;
-    if (root.userData.combatDestructible?.destroyed) continue;
+    if (root.userData.combatDestructible?.destroyed || root.userData.getragen || root.userData.offen) continue;
     const obstacleMinY = root.position.y;
     const obstacleMaxY = obstacleMinY
       + Math.max(CELL * 0.16, Number(root.userData.modelHeight) || CELL * 0.82);
@@ -8735,7 +9511,7 @@ function isCombatPositionBlocked(position, radius, movingRoot) {
   const actorMaxY = actorMinY + actorHeight;
   const blockedByWorld = collisionRoots.some((root) => {
     if (!root.visible || root === movingRoot || !SOLID_ASSETS.has(root.userData.assetName)) return false;
-    if (root.userData.combatDestructible?.destroyed) return false;
+    if (root.userData.combatDestructible?.destroyed || root.userData.getragen || root.userData.offen) return false;
     const obstacleMinY = root.position.y;
     const obstacleMaxY = obstacleMinY + Math.max(CELL * 0.16, Number(root.userData.modelHeight) || CELL * 0.82);
     if (actorMaxY <= obstacleMinY + 0.03 || actorMinY >= obstacleMaxY - 0.03) return false;
@@ -9189,6 +9965,7 @@ function activatePlayerAttack(attack, step, options = {}) {
     playerChargeReleaseTriggered = true;
     playerChargeEffectSpawned = true;
   }
+  startBladeTrail(equippedWeapon, step);
   attackButton.classList.add('is-active');
   return true;
 }
@@ -9356,6 +10133,7 @@ function cancelPlayerAttackCharge(options = {}) {
 }
 
 function beginPlayerAttackInput() {
+  if (getragenesFass) return wirfFass();
   if (!playerCanAcceptAttackInput()) return false;
   if (playerAttackTransitionTimer > 0 || playerAttackPendingStep >= 0) {
     return true;
@@ -10099,7 +10877,7 @@ function updatePlayerWeapon() {
   applyEquipmentSocketTransform('spear');
   applyEquipmentSocketTransform('shield');
   const sickleMotion = playerSickleMotionState();
-  if (sickleMotion) {
+  if (sickleMotion?.flach) {
     const mounted = equipmentSockets.get(sickleMotion.weapon);
     const swing = sickleSweepProgress(sickleMotion.progress, sickleMotion.reverse);
     const direction = sickleMotion.direction;
@@ -10138,6 +10916,7 @@ function schedulePlayerComboTransition(nextStep) {
 }
 
 function finishPlayerAttackMotion(attack, isChargedSpin) {
+  stopBladeTrail();
   setPlayerWeaponChargeGlow(0, false);
   playerAttackActiveDuration = 0;
   playerAttackSpeedMultiplier = 1;
@@ -11139,6 +11918,10 @@ function updateCombatCamera(delta) {
 }
 
 function updateCombat(delta) {
+  updateSignale(delta);
+  updateFelsSchub(delta);
+  updateGetragenesFass();
+  updateFassFlug(delta);
   levelDirector.exitLockTimer = Math.max(0, levelDirector.exitLockTimer - delta);
   updateLevelTransition(delta);
   if (levelDirector.phase !== 'idle') {
@@ -11562,7 +12345,7 @@ function editableRootsForRoom(roomId = activeEditorRoomId) {
 function setRoomRootVisibility(roomId) {
   editableRoots.forEach((root) => {
     const enemy = root.userData.combatEnemy;
-    const available = !root.userData.combatDestructible?.destroyed
+    const available = !root.userData.combatDestructible?.destroyed && !root.userData.getragen && !root.userData.offen
       && (!gameMode || !enemy || (enemy.active && enemy.alive));
     const editorOnlyVisible = (!root.userData.systemMarker && !root.userData.fallZone)
       || (!gameMode && buildMode);
@@ -12026,7 +12809,9 @@ function markerTypeLabel(type) {
     'player-start': 'Spielerstart',
     'combat-trigger': 'Kampftrigger',
     exit: 'Ausgang',
-    arrival: 'Ankunft'
+    arrival: 'Ankunft',
+    druckplatte: 'Druckplatte',
+    schloss: 'Signalschloss'
   }[type] ?? 'Marker';
 }
 
@@ -12116,9 +12901,10 @@ function updateMarkerProperties(root) {
   const type = root?.userData.systemMarker;
   const isChest = root?.userData.assetName === 'chest';
   const isTrap = root?.userData.assetName === 'trap';
+  const istPlatteModell = root?.userData.assetName === DRUCKPLATTE_ASSET;
   const isEnemy = Boolean(root?.userData.combatEnemy);
   const settings = root?.userData.placement?.settings ?? {};
-  markerProperties.hidden = !type && !isChest && !isTrap && !isEnemy;
+  markerProperties.hidden = !type && !isChest && !isTrap && !isEnemy && !istPlatteModell;
   rewardChestField.hidden = !isChest;
   chestDropSettings.hidden = !isChest;
   trapSettingsField.hidden = !isTrap;
@@ -12126,7 +12912,25 @@ function updateMarkerProperties(root) {
   markerTargetField.hidden = true;
   markerConditionField.hidden = true;
   markerRadiusField.hidden = true;
-  if (!type && !isChest && !isTrap && !isEnemy) return;
+  markerSignalField.hidden = true;
+  markerModusField.hidden = true;
+  markerGewichtField.hidden = true;
+  markerWirkungField.hidden = true;
+  if (!type && !isChest && !isTrap && !isEnemy && !istPlatteModell) return;
+
+  if (istPlatteModell) {
+    const werte = plattenEinstellungen(root);
+    markerKind.textContent = 'Druckplatte';
+    markerSignalField.hidden = false;
+    markerModusField.hidden = false;
+    markerGewichtField.hidden = false;
+    markerRadiusField.hidden = false;
+    markerSignal.value = werte.signal;
+    markerModus.value = werte.modus;
+    markerGewicht.value = String(werte.gewicht);
+    markerRadius.value = String(Number(werte.radius.toFixed(2)));
+    return;
+  }
 
   if (isChest) {
     const drop = normalizedChestDrop(root);
@@ -12155,10 +12959,23 @@ function updateMarkerProperties(root) {
 
   markerKind.textContent = markerTypeLabel(type);
   const isExit = type === 'exit';
-  const hasRadius = isExit || type === 'combat-trigger';
+  const istPlatte = type === 'druckplatte';
+  const istSchloss = type === 'schloss';
+  const hasRadius = isExit || type === 'combat-trigger' || istPlatte || istSchloss;
   markerTargetField.hidden = !isExit;
   markerConditionField.hidden = !isExit;
   markerRadiusField.hidden = !hasRadius;
+  // Der Signalname gilt fuer Geber, Nehmer und einen Ausgang, der darauf horcht.
+  markerSignalField.hidden = !(istPlatte || istSchloss || (isExit && settings.condition === 'signal'));
+  markerModusField.hidden = !istPlatte;
+  markerGewichtField.hidden = !istPlatte;
+  markerWirkungField.hidden = !istSchloss;
+  if (!markerSignalField.hidden) markerSignal.value = String(settings.signal ?? '');
+  if (istPlatte) {
+    markerModus.value = settings.modus === 'rasten' ? 'rasten' : 'halten';
+    markerGewicht.value = String(THREE.MathUtils.clamp(Math.round(Number(settings.gewicht) || 1), 1, 4));
+  }
+  if (istSchloss) markerWirkung.value = settings.wirkung === 'schliessen' ? 'schliessen' : 'oeffnen';
 
   if (isExit) {
     markerTargetRoom.replaceChildren();
@@ -12178,7 +12995,7 @@ function updateMarkerProperties(root) {
       settings.targetRoomId = markerTargetRoom.options[0]?.value ?? root.userData.roomId;
     }
     markerTargetRoom.value = settings.targetRoomId;
-    markerCondition.value = settings.condition === 'always' ? 'always' : 'clear';
+    markerCondition.value = ['always', 'signal'].includes(settings.condition) ? settings.condition : 'clear';
   }
   if (hasRadius) markerRadius.value = String(Number(settings.radius) || CELL * 0.7);
 }
@@ -13039,6 +13856,23 @@ markerTargetRoom.addEventListener('change', () => {
 });
 markerCondition.addEventListener('change', () => {
   updateSelectedMarkerSetting('condition', markerCondition.value, 'Freigabe geaendert');
+  if (selectedRoot) updateMarkerProperties(selectedRoot);
+});
+markerSignal.addEventListener('change', () => {
+  const name = markerSignal.value.trim().slice(0, 32);
+  markerSignal.value = name;
+  updateSelectedMarkerSetting('signal', name, 'Signalname geaendert');
+});
+markerModus.addEventListener('change', () => {
+  updateSelectedMarkerSetting('modus', markerModus.value, 'Verhalten geaendert');
+});
+markerGewicht.addEventListener('change', () => {
+  const wert = THREE.MathUtils.clamp(Math.round(Number(markerGewicht.value) || 1), 1, 4);
+  markerGewicht.value = String(wert);
+  updateSelectedMarkerSetting('gewicht', wert, 'Noetige Koerper geaendert');
+});
+markerWirkung.addEventListener('change', () => {
+  updateSelectedMarkerSetting('wirkung', markerWirkung.value, 'Wirkung geaendert');
 });
 markerRadius.addEventListener('change', () => {
   const radius = THREE.MathUtils.clamp(Number(markerRadius.value) || CELL * 0.7, 0.5, 12);
@@ -13423,6 +14257,7 @@ async function init() {
     selectionHelper?.update();
     wavePreviewHelpers.forEach((helper) => helper.update());
     equipmentSelectionHelper?.update();
+    updateBladeTrail(delta);
     updateDiagnostics();
     water.material.uniforms.time.value = elapsed;
     composer.render(delta);

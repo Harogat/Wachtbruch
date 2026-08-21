@@ -9,7 +9,7 @@ reference music profiles without depending on external URLs.
 - Creator: The Cynic Project / cynicmusic
 - Source: https://opengameart.org/content/sirens-in-darkness
 - License: CC0 1.0
-- Local file: `wachhof-sirens-in-darkness.mp3`
+- Local file: `wachhof-sirens-in-darkness.ogg`
 
 ## Tiefe Wacht
 
@@ -25,7 +25,7 @@ reference music profiles without depending on external URLs.
 - Creator: Emma_MA
 - Source: https://opengameart.org/content/determined-pursuit-epic-orchestra-loop
 - License: CC0 1.0
-- Local file: `bruchkammer-determined-pursuit.wav`
+- Local file: `bruchkammer-determined-pursuit.ogg`
 
 CC0 permits broad reuse without an attribution requirement. The credits remain
 in the project to preserve provenance. CC0 status alone is not proof of a

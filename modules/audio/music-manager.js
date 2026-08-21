@@ -3,7 +3,7 @@ const MUSIC_ENABLED_STORAGE_KEY = 'wachtbruch-music-enabled-v1';
 export const ROOM_MUSIC_TRACKS = Object.freeze({
   wachhof: Object.freeze({
     title: 'Sirens in Darkness',
-    src: new URL('../../audio/music/wachhof-sirens-in-darkness.mp3', import.meta.url).href,
+    src: new URL('../../audio/music/wachhof-sirens-in-darkness.ogg', import.meta.url).href,
     volume: 0.12
   }),
   'tiefe-wacht': Object.freeze({
@@ -13,7 +13,7 @@ export const ROOM_MUSIC_TRACKS = Object.freeze({
   }),
   bruchkammer: Object.freeze({
     title: 'Sirens in Darkness',
-    src: new URL('../../audio/music/wachhof-sirens-in-darkness.mp3', import.meta.url).href,
+    src: new URL('../../audio/music/wachhof-sirens-in-darkness.ogg', import.meta.url).href,
     volume: 0.105
   }),
   wachtschlucht: Object.freeze({
@@ -25,7 +25,7 @@ export const ROOM_MUSIC_TRACKS = Object.freeze({
 
 export const COMBAT_MUSIC_TRACK = Object.freeze({
   title: 'Determined Pursuit',
-  src: new URL('../../audio/music/bruchkammer-determined-pursuit.wav', import.meta.url).href,
+  src: new URL('../../audio/music/bruchkammer-determined-pursuit.ogg', import.meta.url).href,
   volume: 0.115
 });
 
